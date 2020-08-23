@@ -1,0 +1,7 @@
+# Default ignored files
+/testlang.iws
+
+# Project exclude paths
+/.gradle/
+/build/
+/build/classes/java/main/

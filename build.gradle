@@ -1,0 +1,74 @@
+buildscript {
+    ext.kotlin_version = '1.4.0'
+    repositories {
+        mavenCentral()
+        maven {
+            name 'JFrog OSS snapshot repo'
+            url  'https://oss.jfrog.org/oss-snapshot-local/'
+        }
+        jcenter()
+    }
+}
+
+plugins {
+    id 'antlr'
+    id 'java'
+    id 'idea'
+    id "org.jetbrains.kotlin.jvm" version "$kotlin_version"
+}
+
+group 'com.llamalad7'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven { url "https://maven.hackery.site/" }
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
+
+configurations {
+    embed
+    implementation.extendsFrom(embed)
+}
+
+dependencies {
+    antlr "org.antlr:antlr4:4.8"
+    embed "org.antlr:antlr4-runtime:4.8"
+    embed "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    embed ("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version") {
+        exclude module: "kotlin-stdlib"
+    }
+    embed "org.ow2.asm:asm:8.0.1"
+    embed "org.ow2.asm:asm-tree:8.0.1"
+    embed "org.ow2.asm:asm-commons:8.0.1"
+    embed "codes.som.anthony:koffee:8.0.2"
+    embed "codes.som.anthony:koffee-kotlin-reflect-sugar:1.0.0"
+    embed "com.github.ajalt:clikt:2.8.0"
+    testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation 'junit:junit:4.13'
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ['-package', 'com.llamalad7.pseudo.generated']
+    outputDirectory = new File("src/main/java/com/llamalad7/pseudo/generated/".toString())
+}
+compileJava.dependsOn generateGrammarSource
+
+clean {
+    delete "src/main/java/com/llamalad7/pseudo/generated/"
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.llamalad7.pseudo.CLIKt'
+    }
+    from {
+        configurations.embed.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}

@@ -5,3 +5,17 @@
 /.gradle/
 /build/
 /build/classes/java/main/
+Test Programs/
+dump.class
+gradle/wrapper/gradle-wrapper.jar
+path/
+pseudo-kt.iml
+pseudo-kt.main.iml
+pseudo-kt.test.iml
+src/main/antlr/gen/
+src/main/gen/
+src/main/java/
+src/main/kotlin/com/llamalad7/pseudo/Main.kt
+src/main/resources/
+src/test/
+testlang.ipr

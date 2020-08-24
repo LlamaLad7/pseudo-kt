@@ -7,6 +7,8 @@ import com.llamalad7.pseudo.utils.ErrorUtils
 abstract class BaseObject {
     var parent: BaseObject? = null
 
+    var classScope: ClassScope? = null
+
     abstract fun getClassMembers(): MutableMap<String, Member>
 
     abstract fun getInstanceMembers(): MutableMap<String, Member>

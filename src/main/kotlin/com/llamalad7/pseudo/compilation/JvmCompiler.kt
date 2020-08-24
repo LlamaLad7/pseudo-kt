@@ -390,8 +390,6 @@ class JvmCompiler(private val mainClassName: String) {
             val oldClassConstant = currentClassConstant
             currentClassConstant = Type.getObjectType(name)
 
-            field(public, "classScope", ClassScope::class)
-
             field(private, "instanceMembers", Map::class)
 
             method(public, "getInstanceMembers", Map::class) {
@@ -419,7 +417,7 @@ class JvmCompiler(private val mainClassName: String) {
                         GlobalScope::class
                     ) // Construct a new ClassScope, with its parent being the GlobalScope
                 }
-                putfield(this@with.name, "classScope", ClassScope::class)
+                invokevirtual(BaseObject::class, "setClassScope", void, ClassScope::class)
 
                 aload_0
                 construct(LinkedHashMap::class, void)
@@ -516,12 +514,7 @@ class JvmCompiler(private val mainClassName: String) {
                 aload_0
                 iconst_0
                 aaload
-                checkcast(this@addClassMethod.name)
-                getfield(
-                    this@addClassMethod.name,
-                    "classScope",
-                    ClassScope::class
-                ) // The parent scope should be the current `ClassScope`, so we can reference members without needing to use `this`
+                invokevirtual(BaseObject::class, "getClassScope", ClassScope::class) // The parent scope should be the current `ClassScope`, so we can reference members without needing to use `this`
             }
             astore(scopeIndex)
 

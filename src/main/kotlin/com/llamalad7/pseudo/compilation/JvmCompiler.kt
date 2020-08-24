@@ -734,13 +734,21 @@ class JvmCompiler(private val mainClassName: String) {
             }
         } else if (callee is VarReference && currentScopeType == ScopeType.METHOD && callee.varName in currentClassMethods) {
             // Slight hackery to allow for calling instance members in the current class without the use of `this`
+            val slot = lowestFreeIndex
+            lowestFreeIndex++
+            aload_0
+            iconst_0
+            aaload
+            astore(slot)
+
             addFunctionCall(
                 MemberExpression(
-                    VarReference("this"),
+                    SlotLoadExpression(slot),
                     callee.varName
                 ),
                 arguments
             )
+            lowestFreeIndex--
             return
         } else {
             add(callee)

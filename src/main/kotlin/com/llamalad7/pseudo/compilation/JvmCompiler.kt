@@ -35,6 +35,8 @@ class JvmCompiler(private val mainClassName: String) {
 
     private var currentScopeType = ScopeType.TOP_LEVEL
 
+    private var currentClassMethods = listOf<String>() // A list of methods in the current class; used so we can check if a function call in fact refers to a method call on the current object
+
     private val String.jvmClassName get() = "com/llamalad7/pseudo/user/$this"
 
     private val scopeIndex = 1 // Where the current Scope is stored in a method/function
@@ -389,6 +391,8 @@ class JvmCompiler(private val mainClassName: String) {
         with(classes.last()) {
             val oldClassConstant = currentClassConstant
             currentClassConstant = Type.getObjectType(name)
+            val oldClassMethods = currentClassMethods
+            currentClassMethods = classDeclaration.methods.map { it.name }
 
             field(private, "instanceMembers", Map::class)
 
@@ -485,6 +489,7 @@ class JvmCompiler(private val mainClassName: String) {
             addClassMethod(classDeclaration.constructor)
 
             currentClassConstant = oldClassConstant
+            currentClassMethods = oldClassMethods
         }
     }
 
@@ -514,7 +519,11 @@ class JvmCompiler(private val mainClassName: String) {
                 aload_0
                 iconst_0
                 aaload
-                invokevirtual(BaseObject::class, "getClassScope", ClassScope::class) // The parent scope should be the current `ClassScope`, so we can reference members without needing to use `this`
+                invokevirtual(
+                    BaseObject::class,
+                    "getClassScope",
+                    ClassScope::class
+                ) // The parent scope should be the current `ClassScope`, so we can reference members without needing to use `this`
             }
             astore(scopeIndex)
 
@@ -704,37 +713,44 @@ class JvmCompiler(private val mainClassName: String) {
     }
 
     private fun MethodAssembly.addFunctionCall(callee: Expression, arguments: List<Expression>) {
-        when (callee) {
-            is MemberExpression -> {
-                add(callee.parent)
+        if (callee is MemberExpression) {
+            add(callee.parent)
+            dup
+            astore(thisIndexForCalls) // We must pass the instance as the first parameter to the method
+            ldc(callee.member)
+            ldc(currentClassConstant)
+            invokevirtual(BaseObject::getMember)
+            push_int(arguments.size + 1)
+            anewarray(BaseObject::class)
+            dup
+            iconst_0
+            aload(thisIndexForCalls)
+            aastore
+            for ((index, arg) in arguments.withIndex()) {
                 dup
-                astore(thisIndexForCalls) // We must pass the instance as the first parameter to the method
-                ldc(callee.member)
-                ldc(currentClassConstant)
-                invokevirtual(BaseObject::getMember)
-                push_int(arguments.size + 1)
-                anewarray(BaseObject::class)
-                dup
-                iconst_0
-                aload(thisIndexForCalls)
+                push_int(index + 1) // Account for the first parameter being the object instance
+                add(arg)
                 aastore
-                for ((index, arg) in arguments.withIndex()) {
-                    dup
-                    push_int(index + 1) // Account for the first parameter being the object instance
-                    add(arg)
-                    aastore
-                }
             }
-            else -> {
-                add(callee)
-                push_int(arguments.size)
-                anewarray(BaseObject::class)
-                for ((index, arg) in arguments.withIndex()) {
-                    dup
-                    push_int(index)
-                    add(arg)
-                    aastore
-                }
+        } else if (callee is VarReference && currentScopeType == ScopeType.METHOD && callee.varName in currentClassMethods) {
+            // Slight hackery to allow for calling instance members in the current class without the use of `this`
+            addFunctionCall(
+                MemberExpression(
+                    VarReference("this"),
+                    callee.varName
+                ),
+                arguments
+            )
+            return
+        } else {
+            add(callee)
+            push_int(arguments.size)
+            anewarray(BaseObject::class)
+            for ((index, arg) in arguments.withIndex()) {
+                dup
+                push_int(index)
+                add(arg)
+                aastore
             }
         }
 

@@ -5,11 +5,7 @@ import com.llamalad7.pseudo.runtime.scope.ClassScope
 import com.llamalad7.pseudo.utils.ErrorUtils
 
 abstract class BaseObject {
-//    abstract val value: Any?
-
-    val parent: BaseObject? = null
-
-    val scope: ClassScope? = null
+    var parent: BaseObject? = null
 
     abstract fun getClassMembers(): MutableMap<String, Member>
 

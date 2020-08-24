@@ -1,5 +1,6 @@
 package com.llamalad7.pseudo.ast
 
+import com.llamalad7.pseudo.runtime.abstraction.Visibility
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -19,6 +20,7 @@ fun Node.process(operation: (Node) -> Unit) {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 fun <T : Node> Node.specificProcess(klass: Class<T>, operation: (T) -> Unit) {
     process {
         if (klass.isInstance(it)) {
@@ -165,11 +167,19 @@ data class StringLit(val value: String, override val position: Position? = null)
 data class NullLit(override val position: Position? = null) :
     Expression
 
+data class NewObject(val clazz: String, val params: List<Expression>, override val position: Position? = null) :
+    Expression
+
 //
 // Statements
 //
 
-data class ArrayDeclaration(val name: String, val dimensions: List<Expression>, val global: Boolean, override val position: Position? = null) :
+data class ArrayDeclaration(
+    val name: String,
+    val dimensions: List<Expression>,
+    val global: Boolean,
+    override val position: Position? = null
+) :
     Statement
 
 data class GlobalAssignment(val identifier: String, val right: Expression, override val position: Position? = null) :
@@ -221,13 +231,27 @@ data class CaseClause(val value: Expression, val body: List<Statement>, override
 data class DefaultClause(val body: List<Statement>, override val position: Position? = null) :
     Statement
 
-data class WhileStatement(val condition: Expression, val body: List<Statement>, override val position: Position? = null) :
+data class WhileStatement(
+    val condition: Expression,
+    val body: List<Statement>,
+    override val position: Position? = null
+) :
     Statement
 
-data class DoUntilStatement(val condition: Expression, val body: List<Statement>, override val position: Position? = null) :
+data class DoUntilStatement(
+    val condition: Expression,
+    val body: List<Statement>,
+    override val position: Position? = null
+) :
     Statement
 
-data class ForStatement(val loopVar: String, val initVal: Expression, val endVal: Expression, val body: List<Statement>, override val position: Position? = null) :
+data class ForStatement(
+    val loopVar: String,
+    val initVal: Expression,
+    val endVal: Expression,
+    val body: List<Statement>,
+    override val position: Position? = null
+) :
     Statement
 
 data class FunctionDeclarationStatement(
@@ -243,6 +267,17 @@ data class BreakStatement(override val position: Position? = null) :
 
 data class ContinueStatement(override val position: Position? = null) :
     Statement
+
+data class ClassDeclaration(
+    val name: String,
+    val fields: List<Field>, val methods: List<Method>, val constructor: Method,
+    override val position: Position?
+) :
+    Statement
+
+data class Field(val visibility: Visibility, val name: String)
+
+data class Method(val visibility: Visibility, val name: String, val params: List<String>, val body: List<Statement>)
 
 //
 // Synthetic

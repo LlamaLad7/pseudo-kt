@@ -9,26 +9,28 @@ import codes.som.anthony.koffee.insns.sugar.invokevirtual
 import codes.som.anthony.koffee.insns.sugar.push_int
 import codes.som.anthony.koffee.modifiers.public
 import com.llamalad7.pseudo.ast.*
+import com.llamalad7.pseudo.runtime.abstraction.Access
 import com.llamalad7.pseudo.runtime.abstraction.BaseObject
+import com.llamalad7.pseudo.runtime.abstraction.Member
+import com.llamalad7.pseudo.runtime.abstraction.Visibility
 import com.llamalad7.pseudo.runtime.objects.*
 import com.llamalad7.pseudo.runtime.scope.*
-import com.llamalad7.pseudo.utils.*
-import org.objectweb.asm.ClassWriter
+import com.llamalad7.pseudo.utils.invokejvmstatic
+import com.llamalad7.pseudo.utils.invokestaticgetter
+import com.llamalad7.pseudo.utils.newClassAssembly
+import com.llamalad7.pseudo.utils.operatorName
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.LabelNode
 import java.io.PrintStream
-import java.lang.StringBuilder
-import java.lang.reflect.Method
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.reflect.jvm.jvmName
 
 class JvmCompiler(private val mainClassName: String) {
     val classes = mutableListOf<ClassAssembly>()
 
     private var currentClassConstant = Type.getObjectType(mainClassName)
-
-    private var currentClassContext: String? = null
 
     private var currentScopeType = ScopeType.TOP_LEVEL
 
@@ -78,10 +80,9 @@ class JvmCompiler(private val mainClassName: String) {
             ScopeType.TOP_LEVEL -> {
                 getstatic(TopLevelScope::class, "INSTANCE", TopLevelScope::class)
             }
-            ScopeType.FUNCTION -> {
+            ScopeType.FUNCTION, ScopeType.METHOD -> {
                 aload(scopeIndex)
             }
-            ScopeType.CLASS -> TODO("not implemented")
         }
     }
 
@@ -98,6 +99,7 @@ class JvmCompiler(private val mainClassName: String) {
             is DoUntilStatement -> add(statement)
             is ForStatement -> add(statement)
             is FunctionDeclarationStatement -> add(statement)
+            is ClassDeclaration -> add(statement)
             is ReturnStatement -> when {
                 currentScopeType == ScopeType.TOP_LEVEL -> `return`
                 statement.expression == null -> {
@@ -122,7 +124,7 @@ class JvmCompiler(private val mainClassName: String) {
 
     private fun MethodAssembly.add(arrayDeclaration: ArrayDeclaration) {
         if (arrayDeclaration.global) {
-            if (currentScopeType != ScopeType.TOP_LEVEL) error("Line ${arrayDeclaration.position?.start?.line}: Global variables must be declared in the com.llamalad7.pseudo.main program")
+            if (currentScopeType != ScopeType.TOP_LEVEL) error("Line ${arrayDeclaration.position?.start?.line}: Global variables must be declared in the main program")
             getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
         } else {
             loadScope()
@@ -142,7 +144,7 @@ class JvmCompiler(private val mainClassName: String) {
     }
 
     private fun MethodAssembly.add(assignment: GlobalAssignment) {
-        if (currentScopeType != ScopeType.TOP_LEVEL) error("Line ${assignment.position?.start?.line}: Global variables must be declared in the com.llamalad7.pseudo.main program")
+        if (currentScopeType != ScopeType.TOP_LEVEL) error("Line ${assignment.position?.start?.line}: Global variables must be declared in the main program")
         getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
         ldc(assignment.identifier)
         add(assignment.right)
@@ -308,52 +310,194 @@ class JvmCompiler(private val mainClassName: String) {
     }
 
     private fun MethodAssembly.add(functionDeclarationStatement: FunctionDeclarationStatement) {
-        if (currentClassContext == null) {
-            val oldScopeType = currentScopeType
-            classes[0].method(
-                public + static,
-                functionDeclarationStatement.name,
-                BaseObject::class,
-                Array<BaseObject>::class
-            ) {
-                currentScopeType = ScopeType.FUNCTION
-                construct(FunctionScope::class, void, Array<BaseObject>::class, Array<String>::class, Scope::class) {
+        val oldScopeType = currentScopeType
+        classes[0].method(
+            public + static,
+            functionDeclarationStatement.name,
+            BaseObject::class,
+            Array<BaseObject>::class
+        ) {
+            currentScopeType = ScopeType.FUNCTION
+            construct(FunctionScope::class, void, Array<BaseObject>::class, Array<String>::class, Scope::class) {
+                aload_0
+                push_int(functionDeclarationStatement.params.size)
+                anewarray(String::class)
+                for ((index, param) in functionDeclarationStatement.params.withIndex()) {
+                    dup
+                    push_int(index)
+                    ldc(param)
+                    aastore
+                }
+                getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
+            }
+            astore(scopeIndex)
+            functionDeclarationStatement.body.forEach {
+                add(it)
+            }
+            invokestaticgetter(ObjectCache::nullInstance)
+            areturn
+            currentScopeType = oldScopeType
+        }
+        getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
+        ldc(functionDeclarationStatement.name)
+        construct(FunctionObject::class, void, java.lang.reflect.Method::class, Int::class) {
+            ldc(currentClassConstant)
+            ldc(functionDeclarationStatement.name)
+            iconst_1
+            anewarray(Class::class)
+            dup
+            iconst_0
+            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;"))
+            aastore
+            invokevirtual(Class<*>::getMethod)
+            push_int(functionDeclarationStatement.params.size)
+        }
+        ldc(currentClassConstant)
+        invokevirtual(Scope::set)
+    }
+
+    private fun MethodAssembly.add(classDeclaration: ClassDeclaration) {
+        if (currentScopeType != ScopeType.TOP_LEVEL) error("Line ${classDeclaration.position?.start?.line}: Classes must be declared in the main program")
+
+        classes.add(
+            newClassAssembly(
+                public,
+                classDeclaration.name.jvmClassName,
+                Opcodes.V1_8,
+                BaseObject::class.jvmName.replace(".", "/")
+            )
+        )
+        with(classes.last()) {
+            val oldClassConstant = currentClassConstant
+            currentClassConstant = Type.getObjectType(name)
+
+            field(public, "classScope", ClassScope::class)
+
+            field(private, "instanceMembers", Map::class)
+
+            method(public, "getInstanceMembers", Map::class) {
+                aload_0
+                getfield(this@with.name, "instanceMembers", Map::class)
+                areturn
+            }
+
+            field(private + static, "classMembers", Map::class)
+
+            method(public, "getClassMembers", Map::class) {
+                getstatic(this@with.name, "classMembers", Map::class)
+                areturn
+            }
+
+            method(public, "<init>", void) {
+                aload_0
+                invokespecial(BaseObject::class, "<init>", void)
+                aload_0
+                construct(ClassScope::class, void, BaseObject::class, Scope::class) {
                     aload_0
-                    push_int(functionDeclarationStatement.params.size)
-                    anewarray(String::class)
-                    for ((index, param) in functionDeclarationStatement.params.withIndex()) {
-                        dup
-                        push_int(index)
-                        ldc(param)
-                        aastore
-                    }
                     getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
                 }
-                astore(scopeIndex)
-                functionDeclarationStatement.body.forEach {
-                    add(it)
+                putfield(this@with.name, "classScope", ClassScope::class)
+
+                aload_0
+                construct(LinkedHashMap::class, void)
+                putfield(this@with.name, "instanceMembers", Map::class)
+
+                for (field in classDeclaration.fields) {
+                    aload_0
+                    invokevirtual(BaseObject::getInstanceMembers)
+                    ldc(field.name)
+                    construct(Member::class, void, Visibility::class, Access::class, BaseObject::class) {
+                        if (field.visibility == Visibility.PUBLIC) {
+                            getstatic(Visibility::class, "PUBLIC", Visibility::class)
+                        } else {
+                            getstatic(Visibility::class, "PRIVATE", Visibility::class)
+                        }
+                        getstatic(Access::class, "WRITEABLE", Access::class)
+                        invokestaticgetter(ObjectCache::nullInstance)
+                    }
+                    invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
                 }
-                invokestaticgetter(ObjectCache::nullInstance)
-                areturn
-                currentScopeType = oldScopeType
+                `return`
             }
-            getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
-            ldc(functionDeclarationStatement.name)
-            construct(FunctionObject::class, void, Method::class, Int::class) {
-                ldc(currentClassConstant)
-                ldc(functionDeclarationStatement.name)
-                iconst_1
-                anewarray(Class::class)
+
+            method(public + static, "<clinit>", void) {
+                construct(LinkedHashMap::class, void)
+                for (method in classDeclaration.methods + listOf(classDeclaration.constructor)) {
+                    dup
+                    ldc(method.name)
+                    construct(Member::class, void, Visibility::class, Access::class, BaseObject::class) {
+                        if (method.visibility == Visibility.PUBLIC) {
+                            getstatic(Visibility::class, "PUBLIC", Visibility::class)
+                        } else {
+                            getstatic(Visibility::class, "PRIVATE", Visibility::class)
+                        }
+                        getstatic(Access::class, "READABLE", Access::class)
+                        construct(FunctionObject::class, void, java.lang.reflect.Method::class, Int::class) {
+                            ldc(currentClassConstant)
+                            ldc(method.name)
+                            iconst_1
+                            anewarray(Class::class)
+                            dup
+                            iconst_0
+                            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;"))
+                            aastore
+                            invokevirtual(Class<*>::getMethod)
+                            push_int(method.params.size + 1)
+                        }
+                    }
+                    invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
+                    pop
+                }
+                putstatic(this@with.name, "classMembers", Map::class)
+                `return`
+            }
+
+            for (method in classDeclaration.methods) {
+                addClassMethod(method)
+            }
+            addClassMethod(classDeclaration.constructor)
+
+            currentClassConstant = oldClassConstant
+        }
+    }
+
+    private fun ClassAssembly.addClassMethod(method: Method) {
+        val oldScopeType = currentScopeType
+        currentScopeType = ScopeType.METHOD
+        method(
+            public + static,
+            method.name,
+            BaseObject::class,
+            Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;")
+        ) {
+            construct(FunctionScope::class, void, Array<BaseObject>::class, Array<String>::class, Scope::class) {
+                aload_0
+                push_int(method.params.size + 1)
+                anewarray(String::class)
                 dup
                 iconst_0
-                ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;"))
+                ldc("this")
                 aastore
-                invokevirtual(Class<*>::getMethod)
-                push_int(functionDeclarationStatement.params.size)
+                for ((index, param) in method.params.withIndex()) {
+                    dup
+                    push_int(index + 1)
+                    ldc(param)
+                    aastore
+                }
+                aload_0
+                iconst_0
+                aaload
+                checkcast(this@addClassMethod.name)
+                getfield(this@addClassMethod.name, "classScope", ClassScope::class)
             }
-            ldc(currentClassConstant)
-            invokevirtual(Scope::set)
-        } else TODO("not implemented yet")
+            astore(scopeIndex)
+
+            method.body.forEach { add(it) }
+
+            invokestaticgetter(ObjectCache::nullInstance)
+            areturn
+        }
+        currentScopeType = oldScopeType
     }
 
     private fun MethodAssembly.add(expression: Expression) {
@@ -375,6 +519,7 @@ class JvmCompiler(private val mainClassName: String) {
             is BooleanLit -> add(expression)
             is StringLit -> add(expression)
             is NullLit -> invokestaticgetter(ObjectCache::nullInstance)
+            is NewObject -> add(expression)
 
             is SlotLoadExpression -> aload(expression.slot)
         }
@@ -502,6 +647,24 @@ class JvmCompiler(private val mainClassName: String) {
     private fun MethodAssembly.add(stringLit: StringLit) {
         ldc(stringLit.value)
         invokejvmstatic(StringObject.Companion::create)
+    }
+
+    private fun MethodAssembly.add(newObject: NewObject) {
+        val slot = lowestFreeIndex
+        lowestFreeIndex++
+        construct(newObject.clazz.jvmClassName, void)
+        dup
+        astore(slot)
+        add(
+            FunctionCallStatement(
+                MemberExpression(
+                    SlotLoadExpression(slot),
+                    "new"
+                ),
+                newObject.params
+            )
+        )
+        lowestFreeIndex--
     }
 
     private fun MethodAssembly.addFunctionCall(callee: Expression, arguments: List<Expression>) {

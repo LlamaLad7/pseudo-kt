@@ -16,6 +16,7 @@ statement : assignment                                                      # As
           | RETURN singleExpression?                                        # ReturnStatement
           | BREAK                                                           # BreakStatement
           | CONTINUE                                                        # ContinueStatement
+          | classDecl                                                       # ClassDeclaration
           ;
 
 assignment : left=singleExpression DOT member=ID ASSIGN right=singleExpression    # MemberDotAssignment
@@ -29,7 +30,7 @@ elseIfClause : ELSEIF condition=singleExpression THEN NEWLINE lines=line+ ;
 
 elseClause : ELSE NEWLINE+ lines=line+ ;
 
-funcDeclaration : FUNCTION name=ID LPAREN (param=ID COMMA)* (param=ID)? RPAREN NEWLINE line+ ENDFUNCTION ;
+funcDeclaration : FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION ;
 
 switchStmt : SWITCH subject=singleExpression COLON NEWLINE caseClause* defaultClause? ENDSWITCH ;
 
@@ -42,6 +43,12 @@ whileStmt : WHILE condition=singleExpression NEWLINE line+ ENDWHILE ;
 doUntilStmt : DO NEWLINE line+ UNTIL condition=singleExpression ;
 
 forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression NEWLINE line+ NEXT nextId=ID ;
+
+classDecl : CLASS name=ID NEWLINE+ (NEWLINE* classStatement)* NEWLINE* ENDCLASS ;
+
+classStatement : visibility=(PUBLIC | PRIVATE) name=ID # FieldDeclaration
+               | visibility=(PUBLIC | PRIVATE) FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION # MethodDeclaration
+               | visibility=(PUBLIC | PRIVATE) FUNCTION NEW LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION # ConstructorDeclaration ;
 
 singleExpression
     : LPAREN singleExpression RPAREN                                        # ParenthesizedExpression
@@ -59,7 +66,6 @@ singleExpression
     | left=singleExpression op=(EQ | NE) right=singleExpression                        # EqualityExpression
     | left=singleExpression AND right=singleExpression                                 # LogicalAndExpression
     | left=singleExpression OR right=singleExpression                                  # LogicalOrExpression
-    | THIS                                                                  # ThisExpression
     | ID                                                                    # IdentifierExpression
     | SUPER                                                                 # SuperExpression
     | literal                                                               # LiteralExpression
@@ -73,5 +79,7 @@ literal : INTLIT                                                            # In
         ;
 
 commaSeparatedList : (singleExpression COMMA)* (singleExpression)? ;
+
+identifierList : (ID COMMA)* ID? ;
 
 nonOptionalCommaSeparatedList : singleExpression (COMMA singleExpression)* COMMA? ;

@@ -1,6 +1,7 @@
 package com.llamalad7.pseudo.ast
 
 import com.llamalad7.pseudo.generated.PseudoParser.*
+import com.llamalad7.pseudo.runtime.abstraction.Visibility
 import com.llamalad7.pseudo.utils.operatorName
 import com.llamalad7.pseudo.utils.toMemberCallExpression
 import com.llamalad7.pseudo.utils.unescaped
@@ -52,6 +53,7 @@ fun StatementContext.toAst(considerPosition: Boolean = false): Statement = when 
     )
     is BreakStatementContext -> BreakStatement(toPosition(considerPosition))
     is ContinueStatementContext -> ContinueStatement(toPosition(considerPosition))
+    is ClassDeclarationContext -> toAst(considerPosition)
     else -> throw UnsupportedOperationException(this.javaClass.canonicalName)
 }
 
@@ -163,9 +165,42 @@ fun ForStatementContext.toAst(considerPosition: Boolean = false): Statement {
 
 fun FunctionDeclarationContext.toAst(considerPosition: Boolean = false): Statement = FunctionDeclarationStatement(
     funcDeclaration().name.text,
-    funcDeclaration().ID().subList(1, funcDeclaration().ID().size).map { it.text },
+    funcDeclaration().identifierList().ID().map { it.text },
     funcDeclaration().line().map { it.statement().toAst(considerPosition) },
     toPosition(considerPosition)
+)
+
+fun ClassDeclarationContext.toAst(considerPosition: Boolean = false): Statement = ClassDeclaration(
+    classDecl().ID().text,
+    classDecl().classStatement().filterIsInstance<FieldDeclarationContext>().map { it.toAst() },
+    classDecl().classStatement().filterIsInstance<MethodDeclarationContext>().map { it.toAst(considerPosition) },
+    classDecl().classStatement().filterIsInstance<ConstructorDeclarationContext>()
+        .also { if (it.size > 1) error("Line ${it[1].start.line}: Only one constructor declaration allowed per class") }
+        .let {
+            if (it.isEmpty()) Method(
+                Visibility.PUBLIC,
+                "new",
+                emptyList(),
+                emptyList()
+            ) else it[0].toAst(considerPosition)
+        },
+    toPosition(considerPosition)
+)
+
+fun FieldDeclarationContext.toAst() = Field(if (PRIVATE() == null) Visibility.PUBLIC else Visibility.PRIVATE, ID().text)
+
+fun MethodDeclarationContext.toAst(considerPosition: Boolean = false) = Method(
+    if (PRIVATE() == null) Visibility.PUBLIC else Visibility.PRIVATE,
+    ID().text,
+    identifierList().ID().map { it.text },
+    line().map { it.statement().toAst(considerPosition) }
+)
+
+fun ConstructorDeclarationContext.toAst(considerPosition: Boolean = false) = Method(
+    if (PRIVATE() == null) Visibility.PUBLIC else Visibility.PRIVATE,
+    NEW().text,
+    identifierList().ID().map { it.text },
+    line().map { it.statement().toAst(considerPosition) }
 )
 
 fun SingleExpressionContext.toAst(considerPosition: Boolean = false): Expression = when (this) {
@@ -235,6 +270,11 @@ fun SingleExpressionContext.toAst(considerPosition: Boolean = false): Expression
     )
     is IdentifierExpressionContext -> VarReference(ID().text, toPosition(considerPosition))
     is LiteralExpressionContext -> toAst(considerPosition)
+    is NewExpressionContext -> NewObject(
+        ID().text,
+        commaSeparatedList().singleExpression().map { it.toAst(considerPosition) },
+        toPosition(considerPosition)
+    )
     else -> throw UnsupportedOperationException(this.javaClass.canonicalName)
 }
 
@@ -248,7 +288,10 @@ fun LiteralExpressionContext.toAst(considerPosition: Boolean = false): Expressio
     is IntLiteralContext -> IntLit(lit.text, toPosition(considerPosition))
     is DecLiteralContext -> DecLit(lit.text, toPosition(considerPosition))
     is BooleanLiteralContext -> BooleanLit(lit.text, toPosition(considerPosition))
-    is StringLiteralContext -> StringLit(lit.text.substring(1, lit.text.length - 1).unescaped, toPosition(considerPosition))
+    is StringLiteralContext -> StringLit(
+        lit.text.substring(1, lit.text.length - 1).unescaped,
+        toPosition(considerPosition)
+    )
     is NullLiteralContext -> NullLit(toPosition(considerPosition))
     else -> error("Unsupported Literal Type")
 }

@@ -8,7 +8,6 @@ WS                 : [\t ]+ -> skip ;
 GLOBAL             : 'global' ;
 ARRAY              : 'array' ;
 NEW                : 'new' ;
-THIS               : 'this' ;
 SUPER              : 'super' ;
 IF                 : 'if' ;
 THEN               : 'then' ;
@@ -31,6 +30,10 @@ TO                 : 'to' ;
 NEXT               : 'next' ;
 BREAK              : 'break' ;
 CONTINUE           : 'continue' ;
+CLASS              : 'class' ;
+PUBLIC             : 'public' ;
+PRIVATE            : 'private' ;
+ENDCLASS           : 'endclass' ;
 
 fragment
 TRUE               : 'true' ;

@@ -14,6 +14,9 @@ import com.llamalad7.pseudo.utils.InMemoryClassLoader
 import org.objectweb.asm.ClassWriter
 import java.io.File
 import java.io.FileInputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.measureTimeMillis
 
@@ -34,7 +37,8 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
     override fun run() {
         val inputFile = File(inputFilePath)
 
-        val outputFile = outputFilePath?.let { File(it) } ?: File(inputFile.parent, inputFile.name + ".class")
+        val outputFile =
+            outputFilePath?.let { File(it) } ?: File(inputFile.parent, inputFile.name.removeSuffix(".psc") + ".psa")
 
         val code = FileInputStream(inputFile)
 
@@ -58,29 +62,51 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
             compiler.accept(root)
         } + " milliseconds")
 
-        val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
-        compiler.classes[0].node.accept(writer)
-        val bytes = writer.toByteArray()
-
-        outputFile.writeBytes(bytes)
+        val classMap = mutableMapOf<String, ByteArray>()
+        for (clazz in compiler.classes) {
+            val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
+            clazz.node.accept(writer)
+            val bytes = writer.toByteArray()
+            classMap[clazz.name] = bytes
+        }
+        ZipOutputStream(outputFile.outputStream()).use { zipOutputStream ->
+            for ((name, byteArray) in classMap.entries) {
+                val entry = ZipEntry("$name.class")
+                entry.size = byteArray.size.toLong()
+                zipOutputStream.putNextEntry(entry)
+                zipOutputStream.write(byteArray)
+                zipOutputStream.closeEntry()
+            }
+        }
         if (run) {
-            InMemoryClassLoader(bytes, mainClassName)
-                .load()
-                .getDeclaredMethod("main", Array<String>::class.java)
+            val loader = InMemoryClassLoader(classMap)
+            val mainClass = loader.load().first { it.name == mainClassName.replace('/', '.') }
+            mainClass.getDeclaredMethod("main", Array<String>::class.java)
                 .invoke(null, emptyArray<String>())
         }
     }
 }
 
-class Run : CliktCommand(help = "Execute a compiled Pseudo class file") {
-    private val inputFilePath by argument(help = "Pseudo class file to execute")
+class Run : CliktCommand(help = "Execute a compiled Pseudo archive") {
+    private val inputFilePath by argument(help = "Pseudo archive to execute")
 
     override fun run() {
         val inputFile = File(inputFilePath)
 
-        val mainClassName = "com/llamalad7/pseudo/user/main/Main"
-        InMemoryClassLoader(inputFile.readBytes(), mainClassName)
+        val classMap = mutableMapOf<String, ByteArray>()
+
+        ZipInputStream(inputFile.inputStream()).use { zipInputStream ->
+            while (true) {
+                val entry = zipInputStream.nextEntry ?: break
+                classMap[entry.name.removeSuffix(".class")] = zipInputStream.readBytes()
+                zipInputStream.closeEntry()
+            }
+        }
+
+        val mainClassName = "com.llamalad7.pseudo.user.main.Main"
+        InMemoryClassLoader(classMap)
             .load()
+            .first { it.name == mainClassName }
             .getDeclaredMethod("main", Array<String>::class.java)
             .invoke(null, emptyArray<String>())
     }

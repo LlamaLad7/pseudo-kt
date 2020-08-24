@@ -30,31 +30,36 @@ import kotlin.reflect.jvm.jvmName
 class JvmCompiler(private val mainClassName: String) {
     val classes = mutableListOf<ClassAssembly>()
 
-    private var currentClassConstant = Type.getObjectType(mainClassName)
+    private var currentClassConstant =
+        Type.getObjectType(mainClassName) // Stores the constant of the current class; used for access checks
 
     private var currentScopeType = ScopeType.TOP_LEVEL
 
     private val String.jvmClassName get() = "com/llamalad7/pseudo/user/$this"
 
-    private val scopeIndex = 1
+    private val scopeIndex = 1 // Where the current Scope is stored in a method/function
 
-    private val thisIndexForCalls = 2
+    private val thisIndexForCalls = 2 // Where the `this` context is stored when invoking member functions
 
-    private var lowestFreeIndex = thisIndexForCalls + 3
+    private var lowestFreeIndex =
+        thisIndexForCalls + 3 // The lowest free index for use by the compiler (this is incremented and decremented for switches, for loops, etc.)
 
-    private var breakLabel: LabelNode? = null
+    private var breakLabel: LabelNode? = null // The label to which we should `goto` if there is a `break`
 
-    private var continueLabel: LabelNode? = null
+    private var continueLabel: LabelNode? = null // The label to which we should `goto` if there is a `continue`
 
     fun accept(root: PseudoFile) {
         classes.add(newClassAssembly(public, mainClassName, Opcodes.V1_8))
         with(classes[0]) {
             method(public + static, "main", void, Array<String>::class) {
+                // Used for timing the program:
                 invokestatic(System::nanoTime)
                 lstore(3)
+                // Process each statement in the source file:
                 root.statements.forEach {
                     add(it)
                 }
+                // Used for timing the program:
                 getstatic(System::class, "out", PrintStream::class)
                 construct(StringBuilder::class, void)
                 ldc("Program execution took ")
@@ -75,6 +80,7 @@ class JvmCompiler(private val mainClassName: String) {
         }
     }
 
+    // Load the current scope onto the stack
     private fun MethodAssembly.loadScope() {
         when (currentScopeType) {
             ScopeType.TOP_LEVEL -> {
@@ -101,9 +107,9 @@ class JvmCompiler(private val mainClassName: String) {
             is FunctionDeclarationStatement -> add(statement)
             is ClassDeclaration -> add(statement)
             is ReturnStatement -> when {
-                currentScopeType == ScopeType.TOP_LEVEL -> `return`
+                currentScopeType == ScopeType.TOP_LEVEL -> `return` // The `main` method will return `void`
                 statement.expression == null -> {
-                    invokestaticgetter(ObjectCache::nullInstance)
+                    invokestaticgetter(ObjectCache::nullInstance) // All other methods must return a `BaseObject`, and so if no value is specified, the `nullInstance` will be used
                     areturn
                 }
                 else -> {
@@ -170,7 +176,7 @@ class JvmCompiler(private val mainClassName: String) {
 
     private fun MethodAssembly.add(functionCallStatement: FunctionCallStatement) {
         addFunctionCall(functionCallStatement.callee, functionCallStatement.arguments)
-        pop
+        pop // All function calls return a value, so if it is ignored (because it is used as a statement), we must pop
     }
 
     private fun MethodAssembly.add(ifStatement: IfStatement) {
@@ -204,7 +210,7 @@ class JvmCompiler(private val mainClassName: String) {
             addIfClause(
                 FunctionCallExpression(
                     MemberExpression(
-                        SlotLoadExpression(slot),
+                        SlotLoadExpression(slot), // A switch statement is really just a chain of `if-else`s with the `==` method
                         "==".operatorName
                     ),
                     listOf(it.value)
@@ -280,7 +286,7 @@ class JvmCompiler(private val mainClassName: String) {
             FunctionCallExpression(
                 MemberExpression(
                     VarReference(forStatement.loopVar),
-                    ">".operatorName
+                    ">".operatorName // If the loop variable is greater than the loop end, we should stop iterating
                 ),
                 listOf(SlotLoadExpression(slot))
             )
@@ -295,7 +301,7 @@ class JvmCompiler(private val mainClassName: String) {
                 FunctionCallExpression(
                     MemberExpression(
                         VarReference(forStatement.loopVar),
-                        "+".operatorName
+                        "+".operatorName // We should add 1 to the loop variable at the end of each iteration
                     ),
                     listOf(IntLit("1"))
                 )
@@ -322,23 +328,23 @@ class JvmCompiler(private val mainClassName: String) {
                 aload_0
                 push_int(functionDeclarationStatement.params.size)
                 anewarray(String::class)
-                for ((index, param) in functionDeclarationStatement.params.withIndex()) {
+                for ((index, param) in functionDeclarationStatement.params.withIndex()) { // Construct an array of parameter names
                     dup
                     push_int(index)
                     ldc(param)
                     aastore
                 }
-                getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
+                getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class) // This is the parent scope
             }
             astore(scopeIndex)
             functionDeclarationStatement.body.forEach {
                 add(it)
             }
-            invokestaticgetter(ObjectCache::nullInstance)
+            invokestaticgetter(ObjectCache::nullInstance) // Return `nullInstance` in case a value hasn't been returned already; if it has, this will be ignored
             areturn
             currentScopeType = oldScopeType
         }
-        getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
+        getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class) // Add the current function to the global scope
         ldc(functionDeclarationStatement.name)
         construct(FunctionObject::class, void, java.lang.reflect.Method::class, Int::class) {
             ldc(currentClassConstant)
@@ -347,7 +353,7 @@ class JvmCompiler(private val mainClassName: String) {
             anewarray(Class::class)
             dup
             iconst_0
-            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;"))
+            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;")) // All methods take an array of `BaseObject`s to simplify invoking them
             aastore
             invokevirtual(Class<*>::getMethod)
             push_int(functionDeclarationStatement.params.size)
@@ -364,7 +370,7 @@ class JvmCompiler(private val mainClassName: String) {
                 public,
                 classDeclaration.name.jvmClassName,
                 Opcodes.V1_8,
-                BaseObject::class.jvmName.replace(".", "/")
+                BaseObject::class.jvmName.replace(".", "/") // All objects must extend `BaseObject`
             )
         )
         with(classes.last()) {
@@ -394,7 +400,11 @@ class JvmCompiler(private val mainClassName: String) {
                 aload_0
                 construct(ClassScope::class, void, BaseObject::class, Scope::class) {
                     aload_0
-                    getstatic(GlobalScope::class, "INSTANCE", GlobalScope::class)
+                    getstatic(
+                        GlobalScope::class,
+                        "INSTANCE",
+                        GlobalScope::class
+                    ) // Construct a new ClassScope, with its parent being the GlobalScope
                 }
                 putfield(this@with.name, "classScope", ClassScope::class)
 
@@ -402,7 +412,7 @@ class JvmCompiler(private val mainClassName: String) {
                 construct(LinkedHashMap::class, void)
                 putfield(this@with.name, "instanceMembers", Map::class)
 
-                for (field in classDeclaration.fields) {
+                for (field in classDeclaration.fields) { // Initialize all fields to `nullInstance` in case they are not initialized with another value before they are used
                     aload_0
                     invokevirtual(BaseObject::getInstanceMembers)
                     ldc(field.name)
@@ -422,7 +432,7 @@ class JvmCompiler(private val mainClassName: String) {
 
             method(public + static, "<clinit>", void) {
                 construct(LinkedHashMap::class, void)
-                for (method in classDeclaration.methods + listOf(classDeclaration.constructor)) {
+                for (method in classDeclaration.methods + listOf(classDeclaration.constructor)) { // Initialize the `classMembers` map
                     dup
                     ldc(method.name)
                     construct(Member::class, void, Visibility::class, Access::class, BaseObject::class) {
@@ -465,7 +475,7 @@ class JvmCompiler(private val mainClassName: String) {
         val oldScopeType = currentScopeType
         currentScopeType = ScopeType.METHOD
         method(
-            public + static,
+            public + static, // Even instance members are static, as this simplifies invoking them; they will automatically be passed an instance as their first parameter
             method.name,
             BaseObject::class,
             Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;")
@@ -474,13 +484,13 @@ class JvmCompiler(private val mainClassName: String) {
                 aload_0
                 push_int(method.params.size + 1)
                 anewarray(String::class)
-                dup
+                dup // Set `this` in the current scope to be the first argument (the instance parameter)
                 iconst_0
                 ldc("this")
                 aastore
                 for ((index, param) in method.params.withIndex()) {
                     dup
-                    push_int(index + 1)
+                    push_int(index + 1) // Account for the first parameter being the object instance
                     ldc(param)
                     aastore
                 }
@@ -488,7 +498,11 @@ class JvmCompiler(private val mainClassName: String) {
                 iconst_0
                 aaload
                 checkcast(this@addClassMethod.name)
-                getfield(this@addClassMethod.name, "classScope", ClassScope::class)
+                getfield(
+                    this@addClassMethod.name,
+                    "classScope",
+                    ClassScope::class
+                ) // The parent scope should be the current `ClassScope`, so we can reference members without needing to use `this`
             }
             astore(scopeIndex)
 
@@ -537,6 +551,7 @@ class JvmCompiler(private val mainClassName: String) {
     }
 
     private fun MethodAssembly.add(notExpression: NotExpression) {
+        // Equivalent to `expression ? false : true`
         add(notExpression.expression)
         ldc(currentClassConstant)
         invokevirtual(BaseObject::attemptBool)
@@ -672,7 +687,7 @@ class JvmCompiler(private val mainClassName: String) {
             is MemberExpression -> {
                 add(callee.parent)
                 dup
-                astore(thisIndexForCalls)
+                astore(thisIndexForCalls) // We must pass the instance as the first parameter to the method
                 ldc(callee.member)
                 ldc(currentClassConstant)
                 invokevirtual(BaseObject::getMember)
@@ -684,7 +699,7 @@ class JvmCompiler(private val mainClassName: String) {
                 aastore
                 for ((index, arg) in arguments.withIndex()) {
                     dup
-                    push_int(index + 1)
+                    push_int(index + 1) // Account for the first parameter being the object instance
                     add(arg)
                     aastore
                 }

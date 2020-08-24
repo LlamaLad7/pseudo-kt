@@ -34,6 +34,7 @@ CLASS              : 'class' ;
 PUBLIC             : 'public' ;
 PRIVATE            : 'private' ;
 ENDCLASS           : 'endclass' ;
+INHERITS           : 'inherits' ;
 
 fragment
 TRUE               : 'true' ;

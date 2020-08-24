@@ -96,6 +96,7 @@ class JvmCompiler(private val mainClassName: String) {
         when (statement) {
             is ArrayDeclaration -> add(statement)
             is GlobalAssignment -> add(statement)
+            is SuperConstructorCall -> add(statement)
             is IdentifierAssignment -> add(statement)
             is MemberAssignment -> add(statement)
             is FunctionCallStatement -> add(statement)
@@ -156,6 +157,18 @@ class JvmCompiler(private val mainClassName: String) {
         add(assignment.right)
         ldc(currentClassConstant)
         invokevirtual(Scope::set)
+    }
+
+    private fun MethodAssembly.add(superConstructorCall: SuperConstructorCall) {
+        add(
+            FunctionCallStatement(
+                MemberExpression(
+                    SuperExpression(),
+                    "new"
+                ),
+                superConstructorCall.arguments
+            )
+        )
     }
 
     private fun MethodAssembly.add(assignment: IdentifierAssignment) {
@@ -427,6 +440,12 @@ class JvmCompiler(private val mainClassName: String) {
                     }
                     invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
                 }
+
+                if (classDeclaration.superClass != null) {
+                    aload_0
+                    construct(classDeclaration.superClass.jvmClassName, void)
+                    invokevirtual(BaseObject::class, "setParent", void, BaseObject::class)
+                }
                 `return`
             }
 
@@ -528,6 +547,7 @@ class JvmCompiler(private val mainClassName: String) {
             is ComparisonOrEqualToExpression -> add(expression)
             is AndExpression -> add(expression)
             is OrExpression -> add(expression)
+            is SuperExpression -> add(expression)
             is IntLit -> add(expression)
             is DecLit -> add(expression)
             is BooleanLit -> add(expression)
@@ -635,6 +655,14 @@ class JvmCompiler(private val mainClassName: String) {
         instructions.add(falseLabel)
         invokestaticgetter(ObjectCache::falseInstance)
         instructions.add(end)
+    }
+
+    private fun MethodAssembly.add(superExpression: SuperExpression) {
+        if (currentScopeType != ScopeType.METHOD) error("Line ${superExpression.position?.start?.line}: 'super' can only be referenced inside a class method")
+        aload_0
+        iconst_0
+        aaload
+        invokevirtual(BaseObject::class, "getParent", BaseObject::class)
     }
 
     private fun MethodAssembly.add(intLit: IntLit) {

@@ -95,42 +95,6 @@ data class FunctionCallExpression(
     override val position: Position? = null
 ) : Expression
 
-//interface BinaryExpression : Expression {
-//    val left: Expression
-//    val right: Expression
-//}
-//
-//data class AdditionExpression(
-//    override val left: Expression,
-//    override val right: Expression,
-//    override val position: Position? = null
-//) :
-//    BinaryExpression
-//
-//data class SubtractionExpression(
-//    override val left: Expression,
-//    override val right: Expression,
-//    override val position: Position? = null
-//) :
-//    BinaryExpression
-//
-//data class MultiplicationExpression(
-//    override val left: Expression,
-//    override val right: Expression,
-//    override val position: Position? = null
-//) :
-//    BinaryExpression
-//
-//data class DivisionExpression(
-//    override val left: Expression,
-//    override val right: Expression,
-//    override val position: Position? = null
-//) :
-//    BinaryExpression
-//
-//data class NegationExpression(val value: Expression, override val position: Position? = null) :
-//    Expression
-
 data class MemberExpression(val parent: Expression, val member: String, override val position: Position? = null) :
     Expression
 
@@ -168,6 +132,9 @@ data class NullLit(override val position: Position? = null) :
     Expression
 
 data class NewObject(val clazz: String, val params: List<Expression>, override val position: Position? = null) :
+    Expression
+
+data class SuperExpression(override val position: Position? = null) :
     Expression
 
 //
@@ -270,6 +237,7 @@ data class ContinueStatement(override val position: Position? = null) :
 
 data class ClassDeclaration(
     val name: String,
+    val superClass: String?,
     val fields: List<Field>, val methods: List<Method>, val constructor: Method,
     override val position: Position?
 ) :
@@ -278,6 +246,9 @@ data class ClassDeclaration(
 data class Field(val visibility: Visibility, val name: String)
 
 data class Method(val visibility: Visibility, val name: String, val params: List<String>, val body: List<Statement>)
+
+data class SuperConstructorCall(val arguments: List<Expression>, override val position: Position? = null) :
+    Statement
 
 //
 // Synthetic

@@ -39,6 +39,10 @@ fun StatementContext.toAst(considerPosition: Boolean = false): Statement = when 
         singleExpression().toAst(considerPosition),
         toPosition(considerPosition)
     )
+    is SuperConstructorCallContext -> SuperConstructorCall(
+        commaSeparatedList().singleExpression().map { it.toAst(considerPosition) },
+        toPosition(considerPosition)
+    )
     is AssignmentStatementContext -> toAst(considerPosition)
     is FunctionCallStatementContext -> toAst(considerPosition)
     is IfStatementContext -> toAst(considerPosition)
@@ -171,7 +175,8 @@ fun FunctionDeclarationContext.toAst(considerPosition: Boolean = false): Stateme
 )
 
 fun ClassDeclarationContext.toAst(considerPosition: Boolean = false): Statement = ClassDeclaration(
-    classDecl().ID().text,
+    classDecl().name.text,
+    classDecl().superName?.text,
     classDecl().classStatement().filterIsInstance<FieldDeclarationContext>().map { it.toAst() },
     classDecl().classStatement().filterIsInstance<MethodDeclarationContext>().map { it.toAst(considerPosition) },
     classDecl().classStatement().filterIsInstance<ConstructorDeclarationContext>()
@@ -268,6 +273,7 @@ fun SingleExpressionContext.toAst(considerPosition: Boolean = false): Expression
         right.toAst(considerPosition),
         toPosition(considerPosition)
     )
+    is SuperExpressionContext -> SuperExpression(toPosition(considerPosition))
     is IdentifierExpressionContext -> VarReference(ID().text, toPosition(considerPosition))
     is LiteralExpressionContext -> toAst(considerPosition)
     is NewExpressionContext -> NewObject(

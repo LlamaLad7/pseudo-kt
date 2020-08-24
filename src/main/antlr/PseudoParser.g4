@@ -6,6 +6,7 @@ line      : NEWLINE* statement (NEWLINE+ | EOF) ;
 statement : assignment                                                      # AssignmentStatement
           | GLOBAL? ARRAY ID LSB nonOptionalCommaSeparatedList RSB          # ArrayDeclaration
           | GLOBAL ID ASSIGN singleExpression                               # GlobalAssignmentStatement
+          | SUPER DOT NEW LPAREN commaSeparatedList RPAREN                  # SuperConstructorCall
           | singleExpression LPAREN args=commaSeparatedList RPAREN          # FunctionCallStatement
           | ifStmt                                                          # IfStatement
           | switchStmt                                                      # SwitchStatement
@@ -44,7 +45,7 @@ doUntilStmt : DO NEWLINE line+ UNTIL condition=singleExpression ;
 
 forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression NEWLINE line+ NEXT nextId=ID ;
 
-classDecl : CLASS name=ID NEWLINE+ (NEWLINE* classStatement)* NEWLINE* ENDCLASS ;
+classDecl : CLASS name=ID (INHERITS superName=ID)? NEWLINE+ (NEWLINE* classStatement)* NEWLINE* ENDCLASS ;
 
 classStatement : visibility=(PUBLIC | PRIVATE) name=ID # FieldDeclaration
                | visibility=(PUBLIC | PRIVATE) FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION # MethodDeclaration

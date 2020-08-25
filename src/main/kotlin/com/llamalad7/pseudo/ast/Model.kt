@@ -131,6 +131,9 @@ data class StringLit(val value: String, override val position: Position? = null)
 data class NullLit(override val position: Position? = null) :
     Expression
 
+data class ArrayLit(val items: List<Expression>, override val position: Position? = null) :
+    Expression
+
 data class NewObject(val clazz: String, val params: List<Expression>, override val position: Position? = null) :
     Expression
 

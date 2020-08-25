@@ -555,6 +555,7 @@ class JvmCompiler(private val mainClassName: String) {
             is BooleanLit -> add(expression)
             is StringLit -> add(expression)
             is NullLit -> invokestaticgetter(ObjectCache::nullInstance)
+            is ArrayLit -> add(expression)
             is NewObject -> add(expression)
 
             is SlotLoadExpression -> aload(expression.slot)
@@ -692,6 +693,18 @@ class JvmCompiler(private val mainClassName: String) {
     private fun MethodAssembly.add(stringLit: StringLit) {
         ldc(stringLit.value)
         invokejvmstatic(StringObject.Companion::create)
+    }
+
+    private fun MethodAssembly.add(arrayLit: ArrayLit) {
+        push_int(arrayLit.items.size)
+        anewarray(BaseObject::class)
+        for ((index, item) in arrayLit.items.withIndex()) {
+            dup
+            push_int(index)
+            add(item)
+            aastore
+        }
+        invokejvmstatic(ArrayObject.Companion::create)
     }
 
     private fun MethodAssembly.add(newObject: NewObject) {

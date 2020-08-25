@@ -17,17 +17,7 @@ function bubbleSort(A)
     until NOT swapped
 endfunction
 
-array nums[10]
-nums[0] = 5
-nums[1] = 7
-nums[2] = 10
-nums[3] = 8
-nums[4] = 1
-nums[5] = 4
-nums[6] = 3
-nums[7] = 6
-nums[8] = 9
-nums[9] = 2
+nums = [5, 7, 10, 8, 1, 4, 3, 6, 9, 2]
 
 bubbleSort(nums)
 print(nums)

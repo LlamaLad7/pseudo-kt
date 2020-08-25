@@ -299,5 +299,9 @@ fun LiteralExpressionContext.toAst(considerPosition: Boolean = false): Expressio
         toPosition(considerPosition)
     )
     is NullLiteralContext -> NullLit(toPosition(considerPosition))
+    is ArrayLiteralContext -> ArrayLit(
+        lit.commaSeparatedList().singleExpression().map { it.toAst(considerPosition) },
+        toPosition(considerPosition)
+    )
     else -> error("Unsupported Literal Type")
 }

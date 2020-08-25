@@ -10,7 +10,7 @@ class Pet
     endfunction
 
     public function getName()
-        return name
+        return this.name
     endfunction
 endclass
 
@@ -25,6 +25,11 @@ class Dog inherits Pet
     public function getBreed()
         return breed
     endfunction
+
+    public function toString()
+        this = null
+        return "Dog(name=" + super.getName() + ", breed=" + getBreed() + ")"
+    endfunction
 endclass
 
 pet = new Pet("Scruffy")
@@ -34,3 +39,6 @@ dog = new Dog("Fido", "Bull terrier")
 dog.sayHello()
 print(dog.getName())
 print(dog.getBreed())
+print(dog)
+x = dog.getName
+print(x(2))

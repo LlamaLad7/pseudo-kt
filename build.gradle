@@ -63,6 +63,7 @@ clean {
 }
 
 jar {
+    exclude('com/llamalad7/pseudo/MainKt*.class')
     manifest {
         attributes 'Main-Class': 'com.llamalad7.pseudo.CLIKt'
     }

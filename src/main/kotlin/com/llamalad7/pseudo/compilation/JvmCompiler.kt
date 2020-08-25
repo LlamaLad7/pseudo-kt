@@ -287,9 +287,10 @@ class JvmCompiler(private val mainClassName: String) {
         val slot = lowestFreeIndex
         lowestFreeIndex++
         val start = LabelNode()
-        continueLabel = start
         val end = LabelNode()
         breakLabel = end
+        val beforeIncrement = LabelNode()
+        continueLabel = beforeIncrement
         add(forStatement.endVal)
         astore(slot)
         add(
@@ -312,6 +313,7 @@ class JvmCompiler(private val mainClassName: String) {
         invokevirtual(BaseObject::attemptBool)
         ifne(end)
         forStatement.body.forEach { add(it) }
+        instructions.add(beforeIncrement)
         add(
             IdentifierAssignment(
                 forStatement.loopVar,

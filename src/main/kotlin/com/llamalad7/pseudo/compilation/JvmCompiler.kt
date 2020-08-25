@@ -264,11 +264,13 @@ class JvmCompiler(private val mainClassName: String) {
         val (oldBreak, oldContinue) = breakLabel to continueLabel
 
         val start = LabelNode()
-        continueLabel = start
         val end = LabelNode()
         breakLabel = end
+        val conditionStart = LabelNode()
+        continueLabel = conditionStart
         instructions.add(start)
         doUntilStatement.body.forEach { add(it) }
+        instructions.add(conditionStart)
         add(doUntilStatement.condition)
         ldc(currentClassConstant)
         invokevirtual(BaseObject::attemptBool)
@@ -318,7 +320,7 @@ class JvmCompiler(private val mainClassName: String) {
                         VarReference(forStatement.loopVar),
                         "+".operatorName // We should add 1 to the loop variable at the end of each iteration
                     ),
-                    listOf(IntLit("1"))
+                    listOf(forStatement.increment)
                 )
             )
         )

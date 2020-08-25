@@ -27,6 +27,7 @@ DO                 : 'do' ;
 UNTIL              : 'until' ;
 FOR                : 'for' ;
 TO                 : 'to' ;
+STEP               : 'step' ;
 NEXT               : 'next' ;
 BREAK              : 'break' ;
 CONTINUE           : 'continue' ;

@@ -43,7 +43,7 @@ whileStmt : WHILE condition=singleExpression NEWLINE line+ ENDWHILE ;
 
 doUntilStmt : DO NEWLINE line+ UNTIL condition=singleExpression ;
 
-forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression NEWLINE line+ NEXT nextId=ID ;
+forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression (STEP step=singleExpression)? NEWLINE line+ NEXT nextId=ID ;
 
 classDecl : CLASS name=ID (INHERITS superName=ID)? NEWLINE+ (NEWLINE* classStatement)* NEWLINE* ENDCLASS ;
 

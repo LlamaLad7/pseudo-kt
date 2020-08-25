@@ -219,6 +219,7 @@ data class ForStatement(
     val loopVar: String,
     val initVal: Expression,
     val endVal: Expression,
+    val increment: Expression,
     val body: List<Statement>,
     override val position: Position? = null
 ) :

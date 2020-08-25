@@ -162,6 +162,7 @@ fun ForStatementContext.toAst(considerPosition: Boolean = false): Statement {
         forStmt().initId.text,
         forStmt().init.toAst(considerPosition),
         forStmt().until.toAst(considerPosition),
+        forStmt().step?.toAst(considerPosition) ?: IntLit("1"),
         forStmt().line().map { it.statement().toAst(considerPosition) },
         toPosition(considerPosition)
     )

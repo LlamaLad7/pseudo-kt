@@ -14,7 +14,7 @@ pseudo-kt.main.iml
 pseudo-kt.test.iml
 src/main/antlr/gen/
 src/main/gen/
-src/main/java/
+src/main/java/com/llamalad7/pseudo/generated
 src/main/kotlin/com/llamalad7/pseudo/Main.kt
 src/main/resources/
 src/test/

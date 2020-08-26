@@ -6,6 +6,7 @@ import com.llamalad7.pseudo.runtime.objects.*
 import com.llamalad7.pseudo.runtime.objects.file.FileReaderObject
 import com.llamalad7.pseudo.runtime.objects.file.FileWriterObject
 import com.llamalad7.pseudo.utils.ErrorUtils
+import com.llamalad7.pseudo.utils.math.isZero
 import com.llamalad7.pseudo.utils.toClassMethod
 import com.llamalad7.pseudo.utils.toGlobalMethod
 
@@ -29,10 +30,13 @@ object GlobalMethods {
         return when (val obj = args[0]) {
             is StringObject -> obj
             is IntObject -> StringObject.create(obj.value.toString())
-            is FloatObject -> StringObject.create(buildString {
-                append(obj.value.toString().trim('0'))
-                if (this.last() == '.') append('0')
-            })
+            is FloatObject -> StringObject.create(
+                if (obj.value.isZero()) "0.0"
+                else buildString {
+                    append(obj.value.toString().trimEnd('0'))
+                    if (this.last() == '.') append('0')
+                }
+            )
             is BooleanObject -> StringObject.create(obj.value.toString())
             is NullObject -> StringObject.create("null")
             else -> {

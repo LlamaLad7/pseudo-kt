@@ -47,6 +47,12 @@ object ArrayObjectClassMembers {
         })
     }
 
+    @JvmStatic
+    fun toList(args: Array<BaseObject>): BaseObject {
+        val intance = args[0] as ArrayObject
+        return ListObject(intance.value.toMutableList())
+    }
+
     val map = mutableMapOf(
         "[]".operatorName to FunctionObject(
             this::get, 2
@@ -59,6 +65,9 @@ object ArrayObjectClassMembers {
         ).toClassMethod(),
         "toString" to FunctionObject(
             this::convertToString, 1
+        ).toClassMethod(),
+        "toList" to FunctionObject(
+            this::toList, 1
         ).toClassMethod()
     )
 }

@@ -1,5 +1,6 @@
 package com.llamalad7.pseudo.runtime.abstraction
 
+import com.llamalad7.pseudo.runtime.builtinmethods.DefaultMethodImpls
 import com.llamalad7.pseudo.runtime.objects.BooleanObject
 import com.llamalad7.pseudo.runtime.scope.ClassScope
 import com.llamalad7.pseudo.utils.ErrorUtils
@@ -20,6 +21,7 @@ abstract class BaseObject {
             it.isPublic() || this::class.java == accessor
         }?.value
         ?: parent?.getMemberOrNull(name, accessor)
+        ?: DefaultMethodImpls.map[name]?.value
     }
 
     fun getMember(name: String, accessor: Class<*>?): BaseObject {
@@ -32,7 +34,8 @@ abstract class BaseObject {
         }?.value ?: getClassMembers()[name]?.takeIf {
             it.isPublic() || this::class.java == accessor
         }?.value
-        ?: parent?.getMemberOrNull(name, accessor)) != null
+        ?: parent?.getMemberOrNull(name, accessor)
+        ?: DefaultMethodImpls.map[name]) != null
     }
 
     fun safeSetMember(

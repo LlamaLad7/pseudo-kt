@@ -43,14 +43,8 @@ object GlobalMethods {
             )
             is BooleanObject -> StringObject.create(obj.value.toString())
             is NullObject -> StringObject.create("null")
-            else -> {
-                if (obj.hasAccessibleMember("toString", null)) {
-                    obj.getMember("toString", null).attemptCall(args, null) as? StringObject
-                        ?: error("Method 'toString' of type '${obj::class.simpleName}' must return a StringObject")
-                } else {
-                    StringObject.create(obj.toString())
-                }
-            }
+            else -> obj.getMember("toString", null).attemptCall(args, null) as? StringObject
+                    ?: error("Method 'toString' of type '${obj::class.simpleName}' must return a StringObject")
         }
     }
 

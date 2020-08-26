@@ -22,6 +22,18 @@ object ArrayObjectClassMembers {
         return instance.value[index.value.toInt()]
     }
 
+    @Suppress("CovariantEquals")
+    @JvmStatic
+    fun equals(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as ArrayObject
+        val other = args[1] as? ArrayObject ?: return ObjectCache.falseInstance
+        if (instance.value.size != other.value.size) return ObjectCache.falseInstance
+        for ((index, item) in instance.value.withIndex()) {
+            if (!item.getMember("equals", null).attemptCall(arrayOf(item, other.value[index]), null).attemptBool(null)) return ObjectCache.falseInstance
+        }
+        return ObjectCache.trueInstance
+    }
+
     @JvmStatic
     fun convertToString(args: Array<BaseObject>): BaseObject {
         val instance = args[0] as ArrayObject
@@ -41,6 +53,9 @@ object ArrayObjectClassMembers {
         ).toClassMethod(),
         "[]=".operatorName to FunctionObject(
             this::set, 3
+        ).toClassMethod(),
+        "equals" to FunctionObject(
+            this::equals, 2
         ).toClassMethod(),
         "toString" to FunctionObject(
             this::convertToString, 1

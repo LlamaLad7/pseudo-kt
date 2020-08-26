@@ -32,9 +32,13 @@ object GlobalMethods {
             is IntObject -> StringObject.create(obj.value.toString())
             is FloatObject -> StringObject.create(
                 if (obj.value.isZero()) "0.0"
-                else buildString {
-                    append(obj.value.toString().trimEnd('0'))
-                    if (this.last() == '.') append('0')
+                else {
+                    val str = obj.value.toString()
+                    if ("E" in str) str
+                    else buildString {
+                        append(obj.value.toString().trimEnd('0'))
+                        if (this.last() == '.') append('0')
+                    }
                 }
             )
             is BooleanObject -> StringObject.create(obj.value.toString())

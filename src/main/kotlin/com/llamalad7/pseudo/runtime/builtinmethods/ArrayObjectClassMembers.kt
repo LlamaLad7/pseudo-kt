@@ -48,6 +48,17 @@ object ArrayObjectClassMembers {
     }
 
     @JvmStatic
+    fun contains(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as ArrayObject
+        for (item in instance.value) {
+            if (item.getMember("equals", null).attemptCall(arrayOf(item, args[1]), null).attemptBool(null)) {
+                return ObjectCache.trueInstance
+            }
+        }
+        return ObjectCache.falseInstance
+    }
+
+    @JvmStatic
     fun copy(args: Array<BaseObject>): BaseObject {
         val instance = args[0] as ArrayObject
         return ArrayObject.create(instance.value.clone())
@@ -65,6 +76,9 @@ object ArrayObjectClassMembers {
         ).toClassMethod(),
         "toString" to FunctionObject(
             this::convertToString, 1
+        ).toClassMethod(),
+        "contains" to FunctionObject(
+            this::convertToString, 2
         ).toClassMethod(),
         "copy" to FunctionObject(
             this::copy, 1

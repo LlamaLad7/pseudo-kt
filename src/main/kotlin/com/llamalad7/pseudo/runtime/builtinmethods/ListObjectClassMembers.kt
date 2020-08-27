@@ -94,6 +94,17 @@ object ListObjectClassMembers {
     }
 
     @JvmStatic
+    fun contains(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as ListObject
+        for (item in instance.value) {
+            if (item.getMember("equals", null).attemptCall(arrayOf(item, args[1]), null).attemptBool(null)) {
+                return ObjectCache.trueInstance
+            }
+        }
+        return ObjectCache.falseInstance
+    }
+
+    @JvmStatic
     fun copy(args: Array<BaseObject>): BaseObject {
         val instance = args[0] as ListObject
         return ListObject(instance.value.toMutableList())
@@ -123,6 +134,9 @@ object ListObjectClassMembers {
         ).toClassMethod(),
         "remove" to FunctionObject(
             this::remove, 2
+        ).toClassMethod(),
+        "contains" to FunctionObject(
+            this::contains, 2
         ).toClassMethod(),
         "copy" to FunctionObject(
             this::copy, 1

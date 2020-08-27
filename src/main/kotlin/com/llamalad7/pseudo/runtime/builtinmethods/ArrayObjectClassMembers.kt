@@ -78,7 +78,7 @@ object ArrayObjectClassMembers {
             this::convertToString, 1
         ).toClassMethod(),
         "contains" to FunctionObject(
-            this::convertToString, 2
+            this::contains, 2
         ).toClassMethod(),
         "copy" to FunctionObject(
             this::copy, 1

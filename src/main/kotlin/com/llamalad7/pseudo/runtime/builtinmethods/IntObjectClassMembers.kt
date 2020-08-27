@@ -7,6 +7,7 @@ import com.llamalad7.pseudo.runtime.objects.FunctionObject
 import com.llamalad7.pseudo.runtime.objects.IntObject
 import com.llamalad7.pseudo.utils.ErrorUtils
 import com.llamalad7.pseudo.utils.defaultFloatPrecision
+import com.llamalad7.pseudo.utils.math.positivePow
 import com.llamalad7.pseudo.utils.math.pow
 import com.llamalad7.pseudo.utils.operatorName
 import com.llamalad7.pseudo.utils.toClassMethod
@@ -77,7 +78,7 @@ object IntObjectClassMembers {
             is IntObject -> {
                 if (other.value >= BigInteger.ZERO) {
                     IntObject.create(
-                        instance.value.pow(other.value).toBigIntegerExact()
+                        instance.value.positivePow(other.value)
                     )
                 } else {
                     FloatObject.create(

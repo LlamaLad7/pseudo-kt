@@ -6,7 +6,4 @@ Written in Kotlin and Antlr
 
 If you use any code from this project it would be nice if you could give credit :D
 
-Uses `BigDecimalUtil` from https://github.com/javadev/calc for some mathematical operations
-
-### Still to-do:
-* A rather large portion of the standard library (note: this includes operators such as `+`, which are implemented as methods)
+Uses `BigDecimalUtil` from [here](https://github.com/javadev/calc/blob/master/src/main/java/com/github/calc/BigDecimalUtil.java) for some mathematical operations

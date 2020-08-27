@@ -71,7 +71,7 @@ object GlobalMethods {
     }
 
     @JvmStatic
-    fun array(args: Array<BaseObject>): BaseObject {
+    fun arr(args: Array<BaseObject>): BaseObject {
         return when (val obj = args[0]) {
             is ArrayObject -> ArrayObject.create(obj.value.clone())
             is ListObject -> ArrayObject.create(obj.value.toTypedArray())
@@ -118,8 +118,8 @@ object GlobalMethods {
         "list" to FunctionObject(
             this::list, 1
         ).toClassMethod(),
-        "array" to FunctionObject(
-            this::array, 1
+        "arr" to FunctionObject(
+            this::arr, 1
         ).toClassMethod(),
         "print" to FunctionObject(
             this::print, 1

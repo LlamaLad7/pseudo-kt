@@ -10,6 +10,9 @@ class ListObject(val value: MutableList<BaseObject>) : BaseObject() {
     companion object {
         @JvmStatic
         private val classMembers = ListObjectClassMembers.map
+
+        @JvmStatic
+        fun create(value: Array<BaseObject>): BaseObject = ListObject(value.toMutableList())
     }
 
     private val instanceMembers = mutableMapOf(

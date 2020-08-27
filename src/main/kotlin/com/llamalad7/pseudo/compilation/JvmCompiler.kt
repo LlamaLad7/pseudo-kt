@@ -284,7 +284,9 @@ class JvmCompiler(private val mainClassName: String) {
     private fun MethodAssembly.add(forStatement: ForStatement) {
         val (oldBreak, oldContinue) = breakLabel to continueLabel
 
-        val slot = lowestFreeIndex
+        val endSlot = lowestFreeIndex
+        lowestFreeIndex++
+        val incrementSlot = lowestFreeIndex
         lowestFreeIndex++
         val start = LabelNode()
         val end = LabelNode()
@@ -292,7 +294,9 @@ class JvmCompiler(private val mainClassName: String) {
         val beforeIncrement = LabelNode()
         continueLabel = beforeIncrement
         add(forStatement.endVal)
-        astore(slot)
+        astore(endSlot)
+        add(forStatement.increment)
+        astore(incrementSlot)
         add(
             IdentifierAssignment(
                 forStatement.loopVar,
@@ -306,7 +310,7 @@ class JvmCompiler(private val mainClassName: String) {
                     VarReference(forStatement.loopVar),
                     ">".operatorName // If the loop variable is greater than the loop end, we should stop iterating
                 ),
-                listOf(SlotLoadExpression(slot))
+                listOf(SlotLoadExpression(endSlot))
             )
         )
         ldc(currentClassConstant)
@@ -322,13 +326,13 @@ class JvmCompiler(private val mainClassName: String) {
                         VarReference(forStatement.loopVar),
                         "+".operatorName // We should add 1 to the loop variable at the end of each iteration
                     ),
-                    listOf(forStatement.increment)
+                    listOf(SlotLoadExpression(incrementSlot))
                 )
             )
         )
         goto(start)
         instructions.add(end)
-        lowestFreeIndex--
+        lowestFreeIndex -= 2
 
         breakLabel = oldBreak
         continueLabel = oldContinue
@@ -560,6 +564,7 @@ class JvmCompiler(private val mainClassName: String) {
             is StringLit -> add(expression)
             is NullLit -> invokestaticgetter(ObjectCache::nullInstance)
             is ArrayLit -> add(expression)
+            is ListLit -> add(expression)
             is NewObject -> add(expression)
 
             is SlotLoadExpression -> aload(expression.slot)
@@ -709,6 +714,18 @@ class JvmCompiler(private val mainClassName: String) {
             aastore
         }
         invokejvmstatic(ArrayObject.Companion::create)
+    }
+
+    private fun MethodAssembly.add(listLit: ListLit) {
+        push_int(listLit.items.size)
+        anewarray(BaseObject::class)
+        for ((index, item) in listLit.items.withIndex()) {
+            dup
+            push_int(index)
+            add(item)
+            aastore
+        }
+        invokejvmstatic(ListObject.Companion::create)
     }
 
     private fun MethodAssembly.add(newObject: NewObject) {

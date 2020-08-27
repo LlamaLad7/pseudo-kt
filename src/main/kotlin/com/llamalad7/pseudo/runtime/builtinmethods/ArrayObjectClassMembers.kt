@@ -38,19 +38,19 @@ object ArrayObjectClassMembers {
     fun convertToString(args: Array<BaseObject>): BaseObject {
         val instance = args[0] as ArrayObject
         return StringObject.create(buildString {
-            append("[")
+            append("{")
             for (index in instance.value.indices) {
                 if (index != 0) append(", ")
                 append((GlobalMethods.str(arrayOf(instance.value[index])) as StringObject).value)
             }
-            append("]")
+            append("}")
         })
     }
 
     @JvmStatic
-    fun toList(args: Array<BaseObject>): BaseObject {
-        val intance = args[0] as ArrayObject
-        return ListObject(intance.value.toMutableList())
+    fun copy(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as ArrayObject
+        return ArrayObject.create(instance.value.clone())
     }
 
     val map = mutableMapOf(
@@ -66,8 +66,8 @@ object ArrayObjectClassMembers {
         "toString" to FunctionObject(
             this::convertToString, 1
         ).toClassMethod(),
-        "toList" to FunctionObject(
-            this::toList, 1
+        "copy" to FunctionObject(
+            this::copy, 1
         ).toClassMethod()
     )
 }

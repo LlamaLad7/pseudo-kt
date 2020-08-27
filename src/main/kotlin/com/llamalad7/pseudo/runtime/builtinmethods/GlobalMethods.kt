@@ -57,7 +57,25 @@ object GlobalMethods {
                 obj.value.toBigDecimalOrNull()
                     ?: error("String \"${obj.value}\" cannot be converted to '${FloatObject::class.simpleName}'")
             )
-            else -> error("Cannot convert type '${obj::class.simpleName}' to '${IntObject::class.simpleName}'")
+            else -> error("Cannot convert type '${obj::class.simpleName}' to '${FloatObject::class.simpleName}'")
+        }
+    }
+
+    @JvmStatic
+    fun list(args: Array<BaseObject>): BaseObject {
+        return when (val obj = args[0]) {
+            is ArrayObject -> ListObject(obj.value.toMutableList())
+            is ListObject -> ListObject(obj.value.toMutableList())
+            else -> error("Cannot convert type '${obj::class.simpleName}' to '${ListObject::class.simpleName}'")
+        }
+    }
+
+    @JvmStatic
+    fun array(args: Array<BaseObject>): BaseObject {
+        return when (val obj = args[0]) {
+            is ArrayObject -> ArrayObject.create(obj.value.clone())
+            is ListObject -> ArrayObject.create(obj.value.toTypedArray())
+            else -> error("Cannot convert type '${obj::class.simpleName}' to '${ArrayObject::class.simpleName}'")
         }
     }
 
@@ -96,6 +114,12 @@ object GlobalMethods {
         ).toClassMethod(),
         "float" to FunctionObject(
             this::float, 1
+        ).toClassMethod(),
+        "list" to FunctionObject(
+            this::list, 1
+        ).toClassMethod(),
+        "array" to FunctionObject(
+            this::array, 1
         ).toClassMethod(),
         "print" to FunctionObject(
             this::print, 1

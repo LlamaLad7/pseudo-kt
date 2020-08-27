@@ -77,7 +77,8 @@ literal : INTLIT                                                            # In
         | BOOLIT                                                            # BooleanLiteral
         | STRLIT                                                            # StringLiteral
         | NULL                                                              # NullLiteral
-        | LSB commaSeparatedList RSB                                        # ArrayLiteral
+        | LCB commaSeparatedList RCB                                        # ArrayLiteral
+        | LSB commaSeparatedList RSB                                        # ListLiteral
         ;
 
 commaSeparatedList : (singleExpression COMMA)* (singleExpression)? ;

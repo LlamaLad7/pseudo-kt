@@ -62,6 +62,8 @@ MOD                : 'MOD' ;
 DIV                : 'DIV' ;
 LSB                : '[' ;
 RSB                : ']' ;
+LCB                : '{' ;
+RCB                : '}' ;
 // Logical
 EQ                 : '==' ;
 NE                 : '!=' ;

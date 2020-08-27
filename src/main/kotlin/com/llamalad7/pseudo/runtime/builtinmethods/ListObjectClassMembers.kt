@@ -93,6 +93,12 @@ object ListObjectClassMembers {
         return ObjectCache.nullInstance
     }
 
+    @JvmStatic
+    fun copy(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as ListObject
+        return ListObject(instance.value.toMutableList())
+    }
+
     val map = mutableMapOf(
         "[]".operatorName to FunctionObject(
             this::get, 2
@@ -117,6 +123,9 @@ object ListObjectClassMembers {
         ).toClassMethod(),
         "remove" to FunctionObject(
             this::remove, 2
+        ).toClassMethod(),
+        "copy" to FunctionObject(
+            this::copy, 1
         ).toClassMethod()
     )
 }

@@ -324,7 +324,7 @@ class JvmCompiler(private val mainClassName: String) {
                 FunctionCallExpression(
                     MemberExpression(
                         VarReference(forStatement.loopVar),
-                        "+".operatorName // We should add 1 to the loop variable at the end of each iteration
+                        "+".operatorName // We should add to the loop variable at the end of each iteration
                     ),
                     listOf(SlotLoadExpression(incrementSlot))
                 )

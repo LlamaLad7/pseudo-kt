@@ -45,39 +45,44 @@ class JvmCompiler(private val mainClassName: String) {
     private val thisIndexForCalls = 2 // Where the `this` context is stored when invoking member functions
 
     private var lowestFreeIndex =
-        thisIndexForCalls + 3 // The lowest free index for use by the compiler (this is incremented and decremented for switches, for loops, etc.)
+        thisIndexForCalls + 1 // The lowest free index for use by the compiler (this is incremented and decremented for switches, for loops, etc.)
 
     private var breakLabel: LabelNode? = null // The label to which we should `goto` if there is a `break`
 
     private var continueLabel: LabelNode? = null // The label to which we should `goto` if there is a `continue`
 
-    fun accept(root: PseudoFile) {
+    fun accept(root: PseudoFile, shouldTime: Boolean = false) {
+        if (shouldTime) lowestFreeIndex += 2
         classes.add(newClassAssembly(public, mainClassName, Opcodes.V1_8))
         with(classes[0]) {
             method(public + static, "main", void, Array<String>::class) {
-                // Used for timing the program:
-                invokestatic(System::nanoTime)
-                lstore(3)
+                if (shouldTime) {
+                    // Used for timing the program:
+                    invokestatic(System::nanoTime)
+                    lstore(3)
+                }
                 // Process each statement in the source file:
                 root.statements.forEach {
                     add(it)
                 }
-                // Used for timing the program:
-                getstatic(System::class, "out", PrintStream::class)
-                construct(StringBuilder::class, void)
-                ldc("Program execution took ")
-                invokevirtual(StringBuilder::class, "append", StringBuilder::class, String::class)
-                invokestatic(System::nanoTime)
-                lload(3)
-                lsub
-                push_int(1000000)
-                i2l
-                ldiv
-                invokevirtual(StringBuilder::class, "append", StringBuilder::class, long)
-                ldc(" milliseconds")
-                invokevirtual(StringBuilder::class, "append", StringBuilder::class, String::class)
-                invokevirtual(StringBuilder::toString)
-                invokevirtual(PrintStream::class, "println", void, String::class)
+                if (shouldTime) {
+                    // Used for timing the program:
+                    getstatic(System::class, "out", PrintStream::class)
+                    construct(StringBuilder::class, void)
+                    ldc("Program execution took ")
+                    invokevirtual(StringBuilder::class, "append", StringBuilder::class, String::class)
+                    invokestatic(System::nanoTime)
+                    lload(3)
+                    lsub
+                    push_int(1000000)
+                    i2l
+                    ldiv
+                    invokevirtual(StringBuilder::class, "append", StringBuilder::class, long)
+                    ldc(" milliseconds")
+                    invokevirtual(StringBuilder::class, "append", StringBuilder::class, String::class)
+                    invokevirtual(StringBuilder::toString)
+                    invokevirtual(PrintStream::class, "println", void, String::class)
+                }
                 `return`
             }
         }

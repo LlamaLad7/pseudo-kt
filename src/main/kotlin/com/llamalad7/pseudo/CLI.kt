@@ -59,7 +59,7 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
         val mainClassName = "com/llamalad7/pseudo/user/main/Main"
         val compiler = JvmCompiler(mainClassName)
         println("Compiled in " + measureTimeMillis {
-            compiler.accept(root)
+            compiler.accept(root, true)
         } + " milliseconds")
 
         val classMap = mutableMapOf<String, ByteArray>()

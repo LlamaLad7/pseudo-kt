@@ -1,0 +1,9 @@
+x was less than 10
+x was less than 50
+x was less than 100
+x was bigger than expected. It was: 600
+x was 2, which is invalid
+x was 10, which is valid
+x was 50, which is valid
+x was 100, which is invalid
+x was -5, which is invalid

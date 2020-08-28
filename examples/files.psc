@@ -1,3 +1,5 @@
+// NOTEST
+// We don't want the automated testing to include this demo
 do
     choice = input("What would you like to do? Enter \"read\" or \"write\": ")
 until choice == "read" OR choice == "write"

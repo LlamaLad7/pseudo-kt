@@ -4,6 +4,7 @@ options { tokenVocab=PseudoLexer; }
 pseudoFile : lines=line* EOF ;
 line      : NEWLINE* statement (NEWLINE+ | EOF) ;
 statement : assignment                                                      # AssignmentStatement
+          | compoundAssignment                                              # CompoundAssignmentStatement
           | GLOBAL? ARRAY ID LSB nonOptionalCommaSeparatedList RSB          # ArrayDeclaration
           | GLOBAL ID ASSIGN singleExpression                               # GlobalAssignmentStatement
           | SUPER DOT NEW LPAREN commaSeparatedList RPAREN                  # SuperConstructorCall
@@ -24,6 +25,11 @@ assignment : left=singleExpression DOT member=ID ASSIGN right=singleExpression  
            | left=singleExpression LSB nonOptionalCommaSeparatedList RSB ASSIGN right=singleExpression  # MemberIndexAssignment
            | ID ASSIGN singleExpression                                     # IdentifierAssignment
            ;
+
+compoundAssignment : left=singleExpression DOT member=ID COMPOUNDASSIGN right=singleExpression    # MemberDotCompoundAssignment
+                   | left=singleExpression LSB nonOptionalCommaSeparatedList RSB COMPOUNDASSIGN right=singleExpression  # MemberIndexCompoundAssignment
+                   | ID COMPOUNDASSIGN singleExpression                                     # IdentifierCompoundAssignment
+                   ;
 
 ifStmt : IF condition=singleExpression THEN NEWLINE lines=line+ elseIfClause* elseClause? ENDIF;
 

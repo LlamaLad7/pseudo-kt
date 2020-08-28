@@ -169,6 +169,24 @@ data class MemberAssignment(
 ) :
     Statement
 
+data class MemberDotCompoundAssignment(
+    val left: Expression,
+    val member: String,
+    val function: String,
+    val right: Expression,
+    override val position: Position? = null
+) :
+    Statement
+
+data class MemberIndexCompoundAssignment(
+    val left: Expression,
+    val index: Expression,
+    val function: String,
+    val right: Expression,
+    override val position: Position? = null
+) :
+    Statement
+
 data class FunctionCallStatement(
     val callee: Expression,
     val arguments: List<Expression>,

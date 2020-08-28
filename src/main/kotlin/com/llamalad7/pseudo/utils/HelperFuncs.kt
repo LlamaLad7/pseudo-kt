@@ -55,7 +55,6 @@ val String.unescaped: String
                     '\'' -> ch = '\''
                     'u' -> {
                         if (i >= this.length - 5) {
-                            ch = 'u'
                             break@loop
                         }
                         val code =

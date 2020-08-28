@@ -44,6 +44,7 @@ fun StatementContext.toAst(considerPosition: Boolean = false): Statement = when 
         toPosition(considerPosition)
     )
     is AssignmentStatementContext -> toAst(considerPosition)
+    is CompoundAssignmentStatementContext -> toAst(considerPosition)
     is FunctionCallStatementContext -> toAst(considerPosition)
     is IfStatementContext -> toAst(considerPosition)
     is SwitchStatementContext -> toAst(considerPosition)
@@ -99,6 +100,55 @@ fun AssignmentStatementContext.toAst(considerPosition: Boolean = false): Stateme
             )
         }
         else -> error("oof")
+    }
+
+fun CompoundAssignmentStatementContext.toAst(considerPosition: Boolean = false): Statement =
+    when (val assignment = compoundAssignment()) {
+        is IdentifierCompoundAssignmentContext -> IdentifierAssignment(
+            assignment.ID().text,
+            FunctionCallExpression(
+                MemberExpression(
+                    VarReference(
+                        assignment.ID().text,
+                        assignment.ID().symbol.let { Position(it.startPoint(), it.endPoint()) }
+                    ),
+                    assignment.COMPOUNDASSIGN().text.removeSuffix("=").operatorName
+                ),
+                listOf(assignment.singleExpression().toAst(considerPosition)),
+                assignment.singleExpression().toPosition(considerPosition)
+            ),
+            toPosition(considerPosition)
+        )
+        is MemberDotCompoundAssignmentContext -> MemberDotCompoundAssignment(
+            assignment.left.toAst(considerPosition),
+            assignment.member.text,
+            assignment.COMPOUNDASSIGN().text.removeSuffix("=").operatorName,
+            assignment.right.toAst(considerPosition),
+            toPosition(considerPosition)
+        )
+        is MemberIndexCompoundAssignmentContext -> {
+            var expression = assignment.left.toAst(considerPosition)
+            val indices = assignment.nonOptionalCommaSeparatedList().singleExpression()
+            for (index in 0 until indices.size - 1) {
+                expression = FunctionCallExpression(
+                    MemberExpression(
+                        expression,
+                        "[]".operatorName,
+                        toPosition(considerPosition)
+                    ),
+                    listOf(indices[index].toAst(considerPosition)),
+                    toPosition(considerPosition)
+                )
+            }
+            MemberIndexCompoundAssignment(
+                expression,
+                indices.last().toAst(considerPosition),
+                assignment.COMPOUNDASSIGN().text.removeSuffix("=").operatorName,
+                assignment.right.toAst(considerPosition),
+                toPosition(considerPosition)
+            )
+        }
+        else -> error("Unsupported compound assignment")
     }
 
 fun FunctionCallStatementContext.toAst(considerPosition: Boolean = false): Statement = FunctionCallStatement(

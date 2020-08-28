@@ -64,6 +64,15 @@ LSB                : '[' ;
 RSB                : ']' ;
 LCB                : '{' ;
 RCB                : '}' ;
+// Compound Assignment Operators
+fragment PLUSASSIGN  : '+=' ;
+fragment MINASSIGN   : '-=' ;
+fragment MULASSIGN   : '*=' ;
+fragment DIVIDEASSIGN: '/=' ;
+fragment EXPASSIGN   : '^=' ;
+fragment MODASSIGN   : 'MOD=' ;
+fragment DIVASSIGN   : 'DIV=' ;
+COMPOUNDASSIGN       : PLUSASSIGN | MINASSIGN | MULASSIGN | DIVIDEASSIGN | EXPASSIGN | MODASSIGN | DIVASSIGN ;
 // Logical
 EQ                 : '==' ;
 NE                 : '!=' ;

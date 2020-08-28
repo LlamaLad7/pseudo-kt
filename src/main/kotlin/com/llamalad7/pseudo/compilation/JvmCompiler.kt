@@ -35,7 +35,8 @@ class JvmCompiler(private val mainClassName: String) {
 
     private var currentScopeType = ScopeType.TOP_LEVEL
 
-    private var currentClassMethods = listOf<String>() // A list of methods in the current class; used so we can check if a function call in fact refers to a method call on the current object
+    private var currentClassMethods =
+        listOf<String>() // A list of methods in the current class; used so we can check if a function call in fact refers to a method call on the current object
 
     private val String.jvmClassName get() = "com/llamalad7/pseudo/user/$this"
 
@@ -101,6 +102,8 @@ class JvmCompiler(private val mainClassName: String) {
             is SuperConstructorCall -> add(statement)
             is IdentifierAssignment -> add(statement)
             is MemberAssignment -> add(statement)
+            is MemberDotCompoundAssignment -> add(statement)
+            is MemberIndexCompoundAssignment -> add(statement)
             is FunctionCallStatement -> add(statement)
             is IfStatement -> add(statement)
             is SwitchStatement -> add(statement)
@@ -128,6 +131,7 @@ class JvmCompiler(private val mainClassName: String) {
                 continueLabel
                     ?: error("Line ${statement.position?.start?.line}: Attempt to continue when there is no active loop")
             )
+            else -> error("Unsupported statement type: ${statement::class.simpleName}")
         }
     }
 
@@ -187,6 +191,66 @@ class JvmCompiler(private val mainClassName: String) {
         add(assignment.right)
         ldc(currentClassConstant)
         invokevirtual(BaseObject::setMember)
+    }
+
+    private fun MethodAssembly.add(assignment: MemberDotCompoundAssignment) {
+        val slot = lowestFreeIndex
+        lowestFreeIndex++
+        add(assignment.left)
+        dup
+        astore(slot)
+        ldc(assignment.member)
+        add(
+            FunctionCallExpression(
+                MemberExpression(
+                    MemberExpression(
+                        SlotLoadExpression(slot),
+                        assignment.member
+                    ),
+                    assignment.function
+                ),
+                listOf(assignment.right)
+            )
+        )
+        ldc(currentClassConstant)
+        invokevirtual(BaseObject::setMember)
+        lowestFreeIndex--
+    }
+
+    private fun MethodAssembly.add(assignment: MemberIndexCompoundAssignment) {
+        val leftSlot = lowestFreeIndex
+        lowestFreeIndex++
+        val indexSlot = lowestFreeIndex
+        lowestFreeIndex++
+        add(assignment.left)
+        astore(leftSlot)
+        add(assignment.index)
+        astore(indexSlot)
+        add(
+            FunctionCallStatement(
+                MemberExpression(
+                    SlotLoadExpression(leftSlot),
+                    "[]=".operatorName
+                ),
+                listOf(
+                    SlotLoadExpression(indexSlot),
+                    FunctionCallExpression(
+                        MemberExpression(
+                            FunctionCallExpression(
+                                MemberExpression(
+                                    SlotLoadExpression(leftSlot),
+                                    "[]".operatorName
+                                ),
+                                listOf(SlotLoadExpression(indexSlot))
+                            ),
+                            assignment.function
+                        ),
+                        listOf(assignment.right)
+                    )
+                )
+            )
+        )
+        lowestFreeIndex -= 2
     }
 
     private fun MethodAssembly.add(functionCallStatement: FunctionCallStatement) {
@@ -568,6 +632,8 @@ class JvmCompiler(private val mainClassName: String) {
             is NewObject -> add(expression)
 
             is SlotLoadExpression -> aload(expression.slot)
+
+            else -> error("Unsupported statement type: ${expression::class.simpleName}")
         }
     }
 

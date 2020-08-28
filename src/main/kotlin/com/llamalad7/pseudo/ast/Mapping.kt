@@ -110,7 +110,7 @@ fun CompoundAssignmentStatementContext.toAst(considerPosition: Boolean = false):
                 MemberExpression(
                     VarReference(
                         assignment.ID().text,
-                        assignment.ID().symbol.let { Position(it.startPoint(), it.endPoint()) }
+                        assignment.ID().symbol.let { if (considerPosition) Position(it.startPoint(), it.endPoint()) else null }
                     ),
                     assignment.COMPOUNDASSIGN().text.removeSuffix("=").operatorName
                 ),

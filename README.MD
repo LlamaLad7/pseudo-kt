@@ -5,9 +5,9 @@ Pseudo is a programming language inspired by the specification outlined here: ht
 It runs on the JVM, and you will soon be able to create a standalone jar from your source code. For now, Pseudo compiles to its own archive format (`.psa`), which must be executed using the Pseudo CLI.
 
 ### Building
-In order to build Pseudo, simply clone the project, import it as a gradle project into your preferred IDE, run the `generateGrammarSource` task, and finally the `build` task .
+In order to build Pseudo, simply clone the project, import it as a gradle project into your preferred IDE, run the `generateGrammarSource` task, and finally the `build` task.
 
-There should now be an executable jar file in your `build/libs` directory .
+There should now be an executable jar file in your `build/libs` directory.
 ### Usage
 Here is a basic `helloworld.psc` program:
 ```

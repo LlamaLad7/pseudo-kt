@@ -10,9 +10,8 @@ for y = -1.3 to 1.3 step 0.1
                 break
             endif
             oldZr = zr
-            oldZi = zi
-            zr = oldZr*oldZr-oldZi*oldZi+x
-            zi = 2*oldZr*oldZi+y
+            zr = zr*zr-zi*zi+x
+            zi = 2*oldZr*zi+y
             i += 1
         endwhile
         string += charmap[i MOD 10]

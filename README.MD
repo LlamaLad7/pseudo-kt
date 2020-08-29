@@ -26,17 +26,41 @@ Precompiled archives can be executed using:
 java -jar pseudo.jar run helloworld.psa
 ```
 
-For more detailed examples, refer to the `examples` folder of this repository.
+For more detailed examples, refer to the [examples folder](https://github.com/LlamaLad7/pseudo-kt/tree/master/examples) of this repository.
 
 ### Features
-* If and switch statements
-* For, while, and do-until loops
-* Functions
-* Classes and inheritance
-* Arrays and lists
-* Console and file I/O
-* Global variables
-* Comments
+* If and switch statements (see [selection.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/selection.psc))
+* For, while, and do-until loops (see [loops.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/loops.psc))
+* Functions:
+```
+function triple(x)
+    return x*3
+endfunction
+
+print(triple(12))
+```
+* Classes and inheritance (see [classes.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/classes.psc))
+* Arrays and lists (see [arrays.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/arrays.psc) and [lists.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/lists.psc))
+* Console I/O:
+```
+print("Hello!")
+name = input("What is your name? ")
+```
+* File I/O (see [files.psc](https://github.com/LlamaLad7/pseudo-kt/blob/master/examples/files.psc))
+* Global variables:
+```
+global x = 10
+
+function test
+    print(x)
+endfunction
+
+test()
+```
+* Comments:
+```
+print("Hello!") // Greet the user
+```
 * A wide range of mathematical and logical operators (refer to [the specification](https://www.ocr.org.uk/Images/260952-pseudocode-guide.pdf))
 
 ### How it's made

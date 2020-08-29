@@ -51,7 +51,7 @@ name = input("What is your name? ")
 ```
 global x = 10
 
-function test
+function test()
     print(x)
 endfunction
 

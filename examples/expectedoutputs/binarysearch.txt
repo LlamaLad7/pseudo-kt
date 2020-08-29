@@ -1,0 +1,11 @@
+Element not found in the list
+Element not found in the list
+Element found at index 0
+Element not found in the list
+Element not found in the list
+Element found at index 1
+Element found at index 2
+Element not found in the list
+Element found at index 3
+Element found at index 4
+Element found at index 5

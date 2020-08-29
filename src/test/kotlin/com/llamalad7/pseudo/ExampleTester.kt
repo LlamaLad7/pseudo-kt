@@ -51,12 +51,14 @@ class ExampleTester {
 
             val stream = ByteArrayOutputStream()
             val oldOut = System.out
+            println("Testing ${file.name}")
             System.setOut(PrintStream(stream))
             mainClass.getDeclaredMethod("main", Array<String>::class.java)
                 .invoke(null, emptyArray<String>())
 
             assertEquals(File("examples/expectedoutputs/${file.nameWithoutExtension}.txt").readText(), stream.toString())
             System.setOut(oldOut)
+            println("Passed!")
         }
     }
 }

@@ -19,6 +19,14 @@ object StringObjectClassMembers {
     }
 
     @JvmStatic
+    fun get(args: Array<BaseObject>): BaseObject {
+        val instance = args[0] as StringObject
+        val index = args[1] as? IntObject ?: error("Index passed to 'StringObject.get' must be an IntObject")
+        return StringObject.create(instance.value[index.value.toInt()].toString())
+    }
+
+    @Suppress("CovariantEquals")
+    @JvmStatic
     fun equals(args: Array<BaseObject>): BaseObject {
         val instance = args[0] as StringObject
         return BooleanObject.create(when(val other = args[1]) {
@@ -38,6 +46,9 @@ object StringObjectClassMembers {
     val map = mutableMapOf(
         "+".operatorName to FunctionObject(
             this::plus, 2
+        ).toClassMethod(),
+        "[]".operatorName to FunctionObject(
+            this::get, 2
         ).toClassMethod(),
         "==".operatorName to FunctionObject(
             this::equals, 2

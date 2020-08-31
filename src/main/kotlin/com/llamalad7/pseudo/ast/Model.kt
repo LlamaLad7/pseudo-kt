@@ -113,6 +113,14 @@ data class AndExpression(val left: Expression, val right: Expression, override v
 data class OrExpression(val left: Expression, val right: Expression, override val position: Position? = null) :
     Expression
 
+data class IfExpression(
+    val condition: Expression,
+    val ifTrue: Expression,
+    val ifFalse: Expression,
+    override val position: Position? = null
+) :
+    Expression
+
 data class VarReference(val varName: String, override val position: Position? = null) :
     Expression
 

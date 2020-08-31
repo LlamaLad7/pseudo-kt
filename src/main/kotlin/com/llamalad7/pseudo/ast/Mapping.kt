@@ -324,6 +324,12 @@ fun SingleExpressionContext.toAst(considerPosition: Boolean = false): Expression
         right.toAst(considerPosition),
         toPosition(considerPosition)
     )
+    is IfExpressionContext -> IfExpression(
+        condition.toAst(considerPosition),
+        ifTrue.toAst(considerPosition),
+        ifFalse.toAst(considerPosition),
+        toPosition(considerPosition)
+    )
     is SuperExpressionContext -> SuperExpression(toPosition(considerPosition))
     is IdentifierExpressionContext -> VarReference(ID().text, toPosition(considerPosition))
     is LiteralExpressionContext -> toAst(considerPosition)

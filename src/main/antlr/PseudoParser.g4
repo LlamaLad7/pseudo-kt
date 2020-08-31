@@ -73,6 +73,7 @@ singleExpression
     | left=singleExpression op=(EQ | NE) right=singleExpression                        # EqualityExpression
     | left=singleExpression AND right=singleExpression                                 # LogicalAndExpression
     | left=singleExpression OR right=singleExpression                                  # LogicalOrExpression
+    | IF condition=singleExpression THEN ifTrue=singleExpression ELSE ifFalse=singleExpression # IfExpression
     | ID                                                                    # IdentifierExpression
     | SUPER                                                                 # SuperExpression
     | literal                                                               # LiteralExpression

@@ -61,6 +61,10 @@ test()
 ```
 print("Hello!") // Greet the user
 ```
+* Ternary expressions
+```
+print(if a > b then a else b)
+```
 * A wide range of mathematical and logical operators (refer to [the specification](https://www.ocr.org.uk/Images/260952-pseudocode-guide.pdf))
 
 ### How it's made

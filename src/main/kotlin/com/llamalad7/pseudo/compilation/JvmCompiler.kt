@@ -626,6 +626,7 @@ class JvmCompiler(private val mainClassName: String) {
             is ComparisonOrEqualToExpression -> add(expression)
             is AndExpression -> add(expression)
             is OrExpression -> add(expression)
+            is IfExpression -> add(expression)
             is SuperExpression -> add(expression)
             is IntLit -> add(expression)
             is DecLit -> add(expression)
@@ -737,6 +738,20 @@ class JvmCompiler(private val mainClassName: String) {
         goto(end)
         instructions.add(falseLabel)
         invokestaticgetter(ObjectCache::falseInstance)
+        instructions.add(end)
+    }
+
+    private fun MethodAssembly.add(ifExpression: IfExpression) {
+        val end = LabelNode()
+        val afterIfTrue = LabelNode()
+        add(ifExpression.condition)
+        ldc(currentClassConstant)
+        invokevirtual(BaseObject::attemptBool)
+        ifeq(afterIfTrue)
+        add(ifExpression.ifTrue)
+        goto(end)
+        instructions.add(afterIfTrue)
+        add(ifExpression.ifFalse)
         instructions.add(end)
     }
 

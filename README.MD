@@ -75,6 +75,4 @@ It compiles to Java Bytecode (see [JvmCompiler.kt](https://github.com/LlamaLad7/
 ### Final Words
 If you would like to suggest a feature, or have found a bug, please don't hesitate to [open an issue](https://github.com/LlamaLad7/pseudo-kt/issues/new/choose).
 
-If you use any code from this project it would be nice if you could give credit :D
-
 Pseudo uses [BigDecimalUtil](https://github.com/javadev/calc/blob/master/src/main/java/com/github/calc/BigDecimalUtil.java) from javadev's "calc" for some mathematical operations, and it is included in this project as per the Apache 2.0 license.

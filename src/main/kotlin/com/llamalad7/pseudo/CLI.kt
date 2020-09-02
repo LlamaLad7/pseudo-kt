@@ -34,6 +34,8 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
 
     private val run by option(help = "Execute the program after compiling it").flag()
 
+    private val time by option(help = "Make the program print its execution time when it is finished").flag()
+
     override fun run() {
         val inputFile = File(inputFilePath)
 
@@ -59,7 +61,7 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
         val mainClassName = "com/llamalad7/pseudo/user/main/Main"
         val compiler = JvmCompiler(mainClassName)
         println("Compiled in " + measureTimeMillis {
-            compiler.accept(root, true)
+            compiler.accept(root, time)
         } + " milliseconds")
 
         val classMap = mutableMapOf<String, ByteArray>()

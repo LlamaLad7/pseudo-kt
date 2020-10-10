@@ -18,3 +18,5 @@ src/main/java/com/llamalad7/pseudo/generated
 src/main/kotlin/com/llamalad7/pseudo/Main.kt
 src/main/resources/
 testlang.ipr
+DEBUG
+**.psa

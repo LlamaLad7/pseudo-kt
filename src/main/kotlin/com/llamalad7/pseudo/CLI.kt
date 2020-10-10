@@ -36,6 +36,8 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
 
     private val time by option(help = "Make the program print its execution time when it is finished").flag()
 
+    private val debug by option(help = "Output debug information from compilation").flag()
+
     override fun run() {
         val inputFile = File(inputFilePath)
 
@@ -78,6 +80,15 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
                 zipOutputStream.putNextEntry(entry)
                 zipOutputStream.write(byteArray)
                 zipOutputStream.closeEntry()
+            }
+        }
+        if (debug) {
+            val debugFolder = File("DEBUG")
+            debugFolder.deleteRecursively()
+            debugFolder.mkdir()
+            for ((name, byteArray) in classMap.entries) {
+                val classFile = File(debugFolder, "${name.substringAfterLast('/')}.class")
+                classFile.writeBytes(byteArray)
             }
         }
         if (run) {

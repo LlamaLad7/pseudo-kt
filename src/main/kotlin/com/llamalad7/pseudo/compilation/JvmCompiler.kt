@@ -9,6 +9,7 @@ import codes.som.anthony.koffee.insns.sugar.invokevirtual
 import codes.som.anthony.koffee.insns.sugar.push_int
 import codes.som.anthony.koffee.modifiers.public
 import com.llamalad7.pseudo.ast.*
+import com.llamalad7.pseudo.indy.DynamicGetMember
 import com.llamalad7.pseudo.runtime.abstraction.Access
 import com.llamalad7.pseudo.runtime.abstraction.BaseObject
 import com.llamalad7.pseudo.runtime.abstraction.Member
@@ -19,10 +20,14 @@ import com.llamalad7.pseudo.utils.invokejvmstatic
 import com.llamalad7.pseudo.utils.invokestaticgetter
 import com.llamalad7.pseudo.utils.newClassAssembly
 import com.llamalad7.pseudo.utils.operatorName
+import org.objectweb.asm.Handle
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.LabelNode
 import java.io.PrintStream
+import java.lang.invoke.CallSite
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.reflect.jvm.jvmName
@@ -651,7 +656,7 @@ class JvmCompiler(private val mainClassName: String) {
         add(memberExpression.parent)
         ldc(memberExpression.member)
         ldc(currentClassConstant)
-        invokevirtual(BaseObject::getMember)
+        dynamicGetMember()
     }
 
     private fun MethodAssembly.add(notExpression: NotExpression) {
@@ -839,7 +844,7 @@ class JvmCompiler(private val mainClassName: String) {
             astore(thisIndexForCalls) // We must pass the instance as the first parameter to the method
             ldc(callee.member)
             ldc(currentClassConstant)
-            invokevirtual(BaseObject::getMember)
+            dynamicGetMember()
             push_int(arguments.size + 1)
             anewarray(BaseObject::class)
             dup
@@ -884,5 +889,24 @@ class JvmCompiler(private val mainClassName: String) {
 
         ldc(currentClassConstant)
         invokevirtual(BaseObject::attemptCall)
+    }
+
+    private fun MethodAssembly.dynamicGetMember() {
+        invokedynamic(
+            "dynamicGetMember",
+            Type.getMethodDescriptor(
+                coerceType(BaseObject::class),
+                coerceType(BaseObject::class), coerceType(String::class), coerceType(Class::class)
+            ),
+            h_invokestatic(
+                DynamicGetMember::class,
+                "bootstrapGetMember",
+                CallSite::class,
+                MethodHandles.Lookup::class,
+                String::class,
+                MethodType::class
+            ),
+            arrayOf()
+        )
     }
 }

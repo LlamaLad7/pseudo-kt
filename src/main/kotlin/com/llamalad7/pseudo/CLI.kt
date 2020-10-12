@@ -8,9 +8,11 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.llamalad7.pseudo.ast.validate
 import com.llamalad7.pseudo.compilation.JvmCompiler
+import com.llamalad7.pseudo.compilation.PseudoClassWriter
 import com.llamalad7.pseudo.parsing.PseudoParserFacade
 import com.llamalad7.pseudo.runtime.scope.Scope
 import com.llamalad7.pseudo.utils.InMemoryClassLoader
+import com.llamalad7.pseudo.utils.userClassPrefix
 import org.objectweb.asm.ClassWriter
 import java.io.File
 import java.io.FileInputStream
@@ -60,7 +62,7 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
             errors.forEach { println(" * L${it.position.line}: ${it.message}") }
             return
         }
-        val mainClassName = "com/llamalad7/pseudo/user/main/Main"
+        val mainClassName = "${userClassPrefix}main/Main"
         val compiler = JvmCompiler(mainClassName)
         println("Compiled in " + measureTimeMillis {
             compiler.accept(root, time)
@@ -68,7 +70,7 @@ class Compile : CliktCommand(help = "Compile a Pseudo source file") {
 
         val classMap = mutableMapOf<String, ByteArray>()
         for (clazz in compiler.classes) {
-            val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
+            val writer = PseudoClassWriter(ClassWriter.COMPUTE_FRAMES)
             clazz.node.accept(writer)
             val bytes = writer.toByteArray()
             classMap[clazz.name] = bytes
@@ -116,7 +118,7 @@ class Run : CliktCommand(help = "Execute a compiled Pseudo archive") {
             }
         }
 
-        val mainClassName = "com.llamalad7.pseudo.user.main.Main"
+        val mainClassName = "${userClassPrefix.replace('/', '.')}main.Main"
         InMemoryClassLoader(classMap)
             .load()
             .first { it.name == mainClassName }

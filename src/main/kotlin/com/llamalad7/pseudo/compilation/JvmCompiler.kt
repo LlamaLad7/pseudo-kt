@@ -16,11 +16,7 @@ import com.llamalad7.pseudo.runtime.abstraction.Member
 import com.llamalad7.pseudo.runtime.abstraction.Visibility
 import com.llamalad7.pseudo.runtime.objects.*
 import com.llamalad7.pseudo.runtime.scope.*
-import com.llamalad7.pseudo.utils.invokejvmstatic
-import com.llamalad7.pseudo.utils.invokestaticgetter
-import com.llamalad7.pseudo.utils.newClassAssembly
-import com.llamalad7.pseudo.utils.operatorName
-import org.objectweb.asm.Handle
+import com.llamalad7.pseudo.utils.*
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.LabelNode
@@ -43,7 +39,7 @@ class JvmCompiler(private val mainClassName: String) {
     private var currentClassMethods =
         listOf<String>() // A list of methods in the current class; used so we can check if a function call in fact refers to a method call on the current object
 
-    private val String.jvmClassName get() = "com/llamalad7/pseudo/user/$this"
+    private val String.jvmClassName get() = "$userClassPrefix$this"
 
     private val scopeIndex = 1 // Where the current Scope is stored in a method/function
 

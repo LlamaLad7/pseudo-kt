@@ -2,8 +2,10 @@ package com.llamalad7.pseudo
 
 import com.llamalad7.pseudo.ast.validate
 import com.llamalad7.pseudo.compilation.JvmCompiler
+import com.llamalad7.pseudo.compilation.PseudoClassWriter
 import com.llamalad7.pseudo.parsing.PseudoParserFacade
 import com.llamalad7.pseudo.utils.InMemoryClassLoader
+import com.llamalad7.pseudo.utils.userClassPrefix
 import org.objectweb.asm.ClassWriter
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -35,13 +37,13 @@ class ExampleTester {
                 errors.forEach { println(" * L${it.position.line}: ${it.message}") }
                 fail("Validation errors")
             }
-            val mainClassName = "com/llamalad7/pseudo/user/main/Main"
+            val mainClassName = "${userClassPrefix}main/Main"
             val compiler = JvmCompiler(mainClassName)
             compiler.accept(root)
 
             val classMap = mutableMapOf<String, ByteArray>()
             for (clazz in compiler.classes) {
-                val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
+                val writer = PseudoClassWriter(ClassWriter.COMPUTE_FRAMES)
                 clazz.node.accept(writer)
                 val bytes = writer.toByteArray()
                 classMap[clazz.name] = bytes

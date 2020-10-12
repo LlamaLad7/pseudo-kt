@@ -15,4 +15,6 @@ val operatorFunctionMap = mapOf(
     "==" to "equals"
 )
 
-val defaultFloatPrecision = 15
+const val defaultFloatPrecision = 15
+
+const val userClassPrefix = "com/llamalad7/pseudo/user/"

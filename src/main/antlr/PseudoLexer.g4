@@ -1,5 +1,5 @@
 lexer grammar PseudoLexer;
-NEWLINE            : '\r\n' | 'r' | '\n' ;
+NEWLINE            : '\r\n' | '\n' ;
 // Comments
 COMMENT            : '//' ~[\r\n]* -> skip ;
 // Whitespace
@@ -44,8 +44,6 @@ FALSE              : 'false' ;
 // Literals
 INTLIT             : [0-9]+ ;
 DECLIT             : [0-9]* DOT [0-9]+ ;
-//INTLIT             : '0'|[1-9][0-9]* ;
-//DECLIT             : [1-9][0-9]* DOT [0-9]+ ;
 BOOLIT             : TRUE | FALSE ;
 STRLIT             : '"' (~'"'|'\\"')* '"' ;
 NULL               : 'null' ;

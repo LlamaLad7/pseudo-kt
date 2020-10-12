@@ -103,9 +103,9 @@ object DynamicGetMember {
      */
     private fun getActualMember(baseObject: BaseObject, name: String, accessor: Class<*>?): Pair<Member, Boolean>? {
         return baseObject.getInstanceMembers()[name]?.takeIf {
-            it.isPublic() || this::class.java == accessor
+            it.isPublic() || baseObject::class.java == accessor
         }?.let { it to true } ?: baseObject.getClassMembers()[name]?.takeIf {
-            it.isPublic() || this::class.java == accessor
+            it.isPublic() || baseObject::class.java == accessor
         }?.let { it to false } ?: baseObject.parent?.let { getActualMember(it, name, accessor) }
         ?: DefaultMethodImpls.map[name]?.let { it to false }
     }

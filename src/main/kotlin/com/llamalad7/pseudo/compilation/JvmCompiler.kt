@@ -446,7 +446,7 @@ class JvmCompiler(private val mainClassName: String) {
             anewarray(Class::class)
             dup
             iconst_0
-            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;")) // All methods take an array of `BaseObject`s to simplify invoking them
+            ldc(Type.getType(Array<BaseObject>::class.java)) // All methods take an array of `BaseObject`s to simplify invoking them
             aastore
             invokevirtual(Class<*>::getMethod)
             push_int(functionDeclarationStatement.params.size)
@@ -516,7 +516,7 @@ class JvmCompiler(private val mainClassName: String) {
                         getstatic(Access::class, "WRITEABLE", Access::class)
                         invokestaticgetter(ObjectCache::nullInstance)
                     }
-                    invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
+                    invokeinterface(Map::class, "put", Any::class, Any::class, Any::class)
                     pop
                 }
                 putfield(this@with.name, "instanceMembers", Map::class)
@@ -548,13 +548,13 @@ class JvmCompiler(private val mainClassName: String) {
                             anewarray(Class::class)
                             dup
                             iconst_0
-                            ldc(Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;"))
+                            ldc(Type.getType(Array<BaseObject>::class.java))
                             aastore
                             invokevirtual(Class<*>::getMethod)
                             push_int(method.params.size + 1)
                         }
                     }
-                    invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
+                    invokeinterface(Map::class, "put", Any::class, Any::class, Any::class)
                     pop
                 }
                 putstatic(this@with.name, "classMembers", Map::class)
@@ -578,7 +578,7 @@ class JvmCompiler(private val mainClassName: String) {
             public + static, // Even instance members are static, as this simplifies invoking them; they will automatically be passed an instance as their first parameter
             method.name,
             BaseObject::class,
-            Type.getType("[Lcom/llamalad7/pseudo/runtime/abstraction/BaseObject;")
+            Array<BaseObject>::class
         ) {
             construct(FunctionScope::class, void, Array<BaseObject>::class, Array<String>::class, Scope::class) {
                 aload_0

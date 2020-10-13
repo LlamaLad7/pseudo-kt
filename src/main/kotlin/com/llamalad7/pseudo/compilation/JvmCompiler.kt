@@ -502,12 +502,10 @@ class JvmCompiler(private val mainClassName: String) {
                 invokevirtual(BaseObject::class, "setClassScope", void, ClassScope::class)
 
                 aload_0
-                construct(LinkedHashMap::class, void)
-                putfield(this@with.name, "instanceMembers", Map::class)
 
+                construct(LinkedHashMap::class, void)
                 for (field in classDeclaration.fields) { // Initialize all fields to `nullInstance` in case they are not initialized with another value before they are used
-                    aload_0
-                    invokevirtual(BaseObject::getInstanceMembers)
+                    dup
                     ldc(field.name)
                     construct(Member::class, void, Visibility::class, Access::class, BaseObject::class) {
                         if (field.visibility == Visibility.PUBLIC) {
@@ -519,7 +517,9 @@ class JvmCompiler(private val mainClassName: String) {
                         invokestaticgetter(ObjectCache::nullInstance)
                     }
                     invokeinterface("java/util/Map", "put", Any::class, Any::class, Any::class)
+                    pop
                 }
+                putfield(this@with.name, "instanceMembers", Map::class)
 
                 if (classDeclaration.superClass != null) {
                     aload_0

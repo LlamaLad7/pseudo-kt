@@ -31,31 +31,31 @@ compoundAssignment : left=singleExpression DOT member=ID COMPOUNDASSIGN right=si
                    | ID COMPOUNDASSIGN singleExpression                                     # IdentifierCompoundAssignment
                    ;
 
-ifStmt : IF condition=singleExpression THEN NEWLINE lines=line+ elseIfClause* elseClause? ENDIF;
+ifStmt : IF condition=singleExpression THEN NEWLINE+ lines=line* elseIfClause* elseClause? ENDIF;
 
-elseIfClause : ELSEIF condition=singleExpression THEN NEWLINE lines=line+ ;
+elseIfClause : ELSEIF condition=singleExpression THEN NEWLINE+ lines=line* ;
 
-elseClause : ELSE NEWLINE+ lines=line+ ;
+elseClause : ELSE NEWLINE+ lines=line* ;
 
-funcDeclaration : FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION ;
+funcDeclaration : FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE+ line* ENDFUNCTION ;
 
 switchStmt : SWITCH subject=singleExpression COLON NEWLINE caseClause* defaultClause? ENDSWITCH ;
 
-caseClause : CASE value=singleExpression COLON NEWLINE line+ ;
+caseClause : CASE value=singleExpression COLON NEWLINE+ line* ;
 
-defaultClause : DEFAULT COLON NEWLINE line+ ;
+defaultClause : DEFAULT COLON NEWLINE+ line* ;
 
-whileStmt : WHILE condition=singleExpression NEWLINE line+ ENDWHILE ;
+whileStmt : WHILE condition=singleExpression NEWLINE+ line* ENDWHILE ;
 
-doUntilStmt : DO NEWLINE line+ UNTIL condition=singleExpression ;
+doUntilStmt : DO NEWLINE+ line* UNTIL condition=singleExpression ;
 
-forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression (STEP step=singleExpression)? NEWLINE line+ NEXT nextId=ID ;
+forStmt : FOR initId=ID ASSIGN init=singleExpression TO until=singleExpression (STEP step=singleExpression)? NEWLINE+ line* NEXT nextId=ID ;
 
 classDecl : CLASS name=ID (INHERITS superName=ID)? NEWLINE+ (NEWLINE* classStatement)* NEWLINE* ENDCLASS ;
 
 classStatement : visibility=(PUBLIC | PRIVATE) name=ID # FieldDeclaration
-               | visibility=(PUBLIC | PRIVATE) FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION # MethodDeclaration
-               | visibility=(PUBLIC | PRIVATE) FUNCTION NEW LPAREN identifierList RPAREN NEWLINE line+ ENDFUNCTION # ConstructorDeclaration ;
+               | visibility=(PUBLIC | PRIVATE) FUNCTION name=ID LPAREN identifierList RPAREN NEWLINE+ line* ENDFUNCTION # MethodDeclaration
+               | visibility=(PUBLIC | PRIVATE) FUNCTION NEW LPAREN identifierList RPAREN NEWLINE+ line* ENDFUNCTION # ConstructorDeclaration ;
 
 singleExpression
     : LPAREN singleExpression RPAREN                                        # ParenthesizedExpression
